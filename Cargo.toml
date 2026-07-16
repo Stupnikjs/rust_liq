@@ -1,0 +1,7 @@
+[workspace]
+members = [
+    "connector", "eth-core", "morpho-api-graph",
+    "worker",
+]
+
+resolver = "2"

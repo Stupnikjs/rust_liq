@@ -1,0 +1,21 @@
+[package]
+name = "eth-core"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+alloy =  {version = "2.1.0", features = [
+    "providers",
+    "rpc-types",
+    "rpc-client",
+    "rpc-client-ws",
+    "transport-ws",
+    "transport-http",
+    "signers",
+    "signer-local",
+    "network",
+    "provider-ws",
+    "pubsub",
+] }
+alloy-primitives = "1.6.0"
+async-trait = "0.1"
