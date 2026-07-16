@@ -4,7 +4,7 @@ Analyse effectuée par lecture de code + vérification de l'ABI Morpho Blue rée
 (EventsLib.sol). Focus uniquement sur les bugs qui menacent l'exécution
 (panics, corruption de données, blocages, fuites mémoire) — pas les choix de
 design.
-
+ok
 ---
 
 ## 1. [CRITIQUE] Panic garanti quand un marché passe à 0 positions
