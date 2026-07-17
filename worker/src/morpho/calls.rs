@@ -7,7 +7,7 @@ use connector::Connector;
 use alloy::providers::Provider;
 use alloy::network::Ethereum;
 use eth_core::encode::{selector,encode_calldata}; 
-
+use eth_core::traits::CallRaw;
 
 // market() call to morpho 
 
@@ -53,11 +53,24 @@ pub fn decode_market_stats(data: &[u8]) -> Result<MarketStatsCall, anyhow::Error
     })
 }
 
-pub async  fn market_call(conn: &Connector, morpho_addr:Address, market_id: &[u8] ) -> Result<MarketStatsCall, anyhow::Error>{
-    let selector = selector("market(bytes32)"); 
-    let calldata = encode_calldata(selector, market_id); 
-    let resp = conn.call_raw(morpho_addr, calldata).await; 
-    decode_market_stats(&resp.expect("market call failed"))
+pub async fn market_call<C>(
+    conn: &C,
+    morpho_addr: Address,
+    market_id: &[u8],
+) -> Result<MarketStatsCall, anyhow::Error>
+where
+    C: CallRaw,
+{
+    let selector = selector("market(bytes32)");
+
+    let calldata = encode_calldata(selector, market_id);
+
+    let resp = conn
+        .call_raw(morpho_addr, calldata)
+        .await
+        .map_err(|e| anyhow::anyhow!("market call failed: {:?}", e))?;
+
+    decode_market_stats(&resp)
 }
 
 
@@ -88,12 +101,15 @@ pub fn decode_position(data: &[u8]) -> Result<PositionCall, anyhow::Error> {
 }
 
 
-pub async fn position_call(
-    conn: &Connector,
+pub async fn position_call<C>(
+    conn: &C,
     morpho_addr: Address,
     market_id: &[u8],
     user: Address,
-) -> Result<PositionCall, anyhow::Error> {
+) -> Result<PositionCall, anyhow::Error>
+    where
+        C: CallRaw
+    {
 
     let sel = selector("position(bytes32,address)");
     let mut args: Vec<u8> = Vec::new(); 
@@ -120,7 +136,10 @@ pub async fn position_call(
 // price() call on oracle morpho 
 // exponent = 36 + loan_decimals - collateral_decimals
 
-pub async fn oracle_call(conn: &Connector, oracle_addr: Address) -> Result<U256, anyhow::Error> {
+pub async fn oracle_call<C>(conn: &C, oracle_addr: Address)-> Result<U256, anyhow::Error>
+    where
+        C: CallRaw
+    {
     let selector = selector("price()");
     let calldata = encode_calldata(selector, &[]);
     let resp = conn.call_raw(oracle_addr, calldata).await

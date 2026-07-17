@@ -1,7 +1,8 @@
 #[warn(unreachable_code)]
 use std::collections::HashMap;
 use std::error::Error;
-use std::sync::{Arc, RwLock};
+use std::sync::{Arc};
+use tokio::sync::RwLock; 
 use config::{Config, load_base_config};
 use connector::{Connector};
 
@@ -50,7 +51,7 @@ impl Runner {
         let cache = Arc::new(MarketCache::new(&[]));
         
         // Error lauching connector 
-        let conn = connector::build(&config.main_rpc, &config.second_rpc, &config.ws_rpc, config.signer.clone(), chainid, 200).await?;
+        let conn = connector::build(&config.main_rpc, &config.second_rpc, &config.ws_rpc, config.signer.clone(), chainid, 50).await?;
         let connector = Arc::new(conn);
         
         let route_cache = Arc::new(RwLock::new(RouteCache::new()));

@@ -1,9 +1,10 @@
 use std::collections::HashMap;
 use std::sync::{Arc};
-use alloy_primitives::{Address,FixedBytes}; 
+use alloy_primitives::{Address,FixedBytes};
+use tokio::sync::RwLock; 
 use crate::backtest::{BacktestSnapshot, BacktestStore, snap_to_4_batch};
 use crate::cache::positions::BorrowPosition;
-use crate::cache::{ MarketCache};
+use crate::cache::{ MarketCache, MarketSnapshot};
 use connector::Connector;
 use crate::swap::routes::RouteCache;
 use crate::{liquidate, morpho}; 
@@ -23,29 +24,20 @@ pub struct MarketLoopConsumer {
 }
 
 impl MarketLoopConsumer {
-    pub async fn run(mut self) {
+    pub async fn run(mut self,index: u64) {
+        let mut batch:Vec<BacktestSnapshot> = Vec::with_capacity(32);
         let mut count: u64 = 0;
-        let mut last_sec = now_secs(); 
-        let mut batch:Vec<BacktestSnapshot> = Vec::with_capacity(32);     
-
+        let last_sec = now_secs(); 
+            
         loop {
             let now = now_secs(); 
-
-            self.refresh_oracle_and_hf().await; 
-            if count % 10 == 0 {
-                self.market_refresh_and_sort().await; 
-            }; 
-
-            let Some(mparam) = self.cache.get_market_param_by_id(self.id) else {
-                eprintln!("[market_loop] mparam introuvable pour market_id={:?}, skip ce tick", self.id);
-                tokio::time::sleep(Duration::from_secs(3600)).await;
-                continue;
-            };
-            let Some(snap) = self.cache.snapshot(self.id) else {
-                eprintln!("[market_loop] snapshot introuvable pour market_id={:?}, skip ce tick", self.id);
-                tokio::time::sleep(Duration::from_secs(3600)).await;
-                continue;
-            };
+            let _  = self.refresh(count, index).await; 
+            
+            let Some((snap, mparam)) = self.snapshot() else {
+                        tokio::time::sleep(Duration::from_secs(3600)).await;
+                        continue;
+                };
+           
             let price_norm = price_normalized(
                 mparam.loan_token_decimals,
                 mparam.collateral_token_decimals,
@@ -56,17 +48,7 @@ impl MarketLoopConsumer {
             if let (Some(pos), 0) = (lowest, interval) {
                 self.try_liquidate(pos, mparam).await; 
             }
-
-            let to_push_in_batch = snap_to_4_batch(&snap);
-            batch.extend_from_slice(to_push_in_batch.as_slice());
-            if batch.len() >= 32 {
-                let _ = self.backest.push_snapshot(&batch).await;
-                batch.clear();
-            }
-            
-            if now - last_sec > 100 {
-                last_sec = now; 
-            }
+            self.batching(&snap, &mut batch).await; 
             count += 1;
             tokio::time::sleep(Duration::from_secs(interval)).await;
         }
@@ -75,7 +57,7 @@ impl MarketLoopConsumer {
 
     async fn try_liquidate(&mut self, pos:BorrowPosition, mparam:MarketParam) {
 // remplacer le std RwLock par tokio RwLock
-        let route = self.route_cache.read().unwrap().get_edge(&pos.market_id).cloned();
+        let route = self.route_cache.read().await.get_edge(&pos.market_id).cloned();
         let Some(route) = route else { return };
 
         let attempts = self.spaming_map.entry(pos.address).or_default();
@@ -98,11 +80,37 @@ impl MarketLoopConsumer {
             .await;
         self.cache.sort_by_hf(self.id);
     }
+
+    async fn refresh(&self, count: u64, refresh_every: u64) {
+    self.refresh_oracle_and_hf().await;
+
+    if count % refresh_every == 0 {
+        self.market_refresh_and_sort().await;
+    }
+}
+
+    async fn batching(& mut self, snap:&MarketSnapshot, batch: &mut Vec<BacktestSnapshot>,) {
+        
+            let to_push_in_batch = snap_to_4_batch(snap);
+            batch.extend_from_slice(to_push_in_batch.as_slice());
+            if batch.len() >= 32 {
+                let _ = self.backest.push_snapshot(batch).await;
+                batch.clear();
+            }
+    }
+        fn snapshot(
+    &self,
+) -> Option<(MarketSnapshot, MarketParam)> {
+    let mparam = self.cache.get_market_param_by_id(self.id)?;
+    let snap = self.cache.snapshot(self.id)?;
+
+    Some((snap, mparam))
+}
 }
 
 impl Runner {
     pub async fn market_loop(&self) {
-        for id in self.cache.ids() {
+        for (index, id) in self.cache.ids().into_iter().enumerate() {
             let lc = MarketLoopConsumer {
                 spaming_map: HashMap::new(),
                 cache: Arc::clone(&self.cache),
@@ -112,14 +120,18 @@ impl Runner {
                 liquidator_addr: self.config.liquidator_addr,
                 backest: Arc::clone(&self.backtest),
                 id,
+                
             };
-
-            tokio::spawn(lc.run());
+             
+            tokio::spawn(lc.run(index as u64));
+            
         }
     }
 
-    
+
 }
+
+    
 
 
 

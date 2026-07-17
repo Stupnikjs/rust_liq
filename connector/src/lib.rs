@@ -6,6 +6,7 @@ use alloy::rpc::client::WsConnect;
 use alloy::rpc::types::{BlockNumberOrTag, Filter, Log, TransactionRequest};
 use alloy::signers::local::PrivateKeySigner;
 use alloy::primitives::{Address, Bytes, TxHash, address};
+use eth_core::traits::CallRaw; 
 use futures::StreamExt;
 use tx_sender::TxSender;
 use tokio::sync::Semaphore;
@@ -129,15 +130,6 @@ impl RateLimiter {
 }
 
 
-
-#[async_trait::async_trait]
-pub trait CallRaw {
-    async fn call_raw(
-        &self,
-        to: Address,
-        data: Bytes,
-    ) -> Result<Bytes, Box<dyn std::error::Error>>;
-}
 
 
 

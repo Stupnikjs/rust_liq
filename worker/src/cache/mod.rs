@@ -6,6 +6,7 @@ mod sort;
 pub mod logs;
 pub mod parse;
 
+use alloy::serde::quantity::vec;
 use alloy_primitives::{Address, U256, FixedBytes};
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
@@ -113,9 +114,7 @@ where
     {
         let guard = self.markets.read().unwrap();
         let market = guard.get(&id)?.read().unwrap();
-        if market.positions.len() == 0 { 
-            return None;
-        }
+       
         Some(MarketSnapshot {
             params: market.params.clone(),
             id,

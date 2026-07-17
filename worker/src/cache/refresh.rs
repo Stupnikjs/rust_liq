@@ -15,7 +15,7 @@ impl MarketCache {
     stream::iter(self.ids())
         .for_each_concurrent(5, |id| async move {
             match  fetch_all_positions(id, chain_id).await { //
-                Ok(positions) if positions.len() > 10 => {
+                Ok(positions) if positions.len() > 2 => {
                     let borrow_pos_arr: Vec<BorrowPosition> = positions
                         .into_iter()
                         .map(|p| position_item_to_borrow_pos(p, id))

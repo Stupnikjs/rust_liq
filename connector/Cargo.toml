@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+eth-core = { path = "../eth-core" }
 axum = "0.7"
 alloy =  {version = "2.1.0", features = [
     "providers",

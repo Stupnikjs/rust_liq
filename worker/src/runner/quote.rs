@@ -3,7 +3,8 @@ use connector::Connector;
 use crate::runner::{Runner, config::Config}; 
 use crate::swap::{routes::RouteCache, quoter::UniswapV3}; 
 use std::fs;
-use std::sync::{RwLock,Arc};
+use tokio::sync::RwLock; 
+use std::sync::{Arc};
 use std::str::FromStr; 
 
 
@@ -43,7 +44,7 @@ impl QuoteConsumer {
             self.cache.update(id, |m| m.canceled = true);
             continue;
             };
-            let mut route_cache = self.route_cache.write().unwrap(); 
+            let mut route_cache = self.route_cache.write().await; 
             route_cache.insert_edge(id, edge);
             println!("found swap for {}", snap.params.get_pair()); 
         }
