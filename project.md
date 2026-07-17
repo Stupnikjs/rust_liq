@@ -34,3 +34,9 @@ New() crée la table snapshot et spawn la "routine" qui recoit les batch de snap
 
 ## Swap 
 
+
+## Market Loop 
+estimation du temps a sleep avant le nouveau refresh. 
+=> dépend de la distance avec la prochaine liquidation. 
+=> 
+
