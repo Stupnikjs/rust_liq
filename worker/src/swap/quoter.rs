@@ -1,6 +1,7 @@
 // src/swap/uniswap.rs
 use std::time::{Duration, Instant};
 use alloy::primitives::{Address, U256, Bytes};
+use alloy_primitives::address;
 use crate::swap::{PoolEdge, now_ms};
 use connector::Connector;
 use eth_core::encode::{encode_address, encode_uint256,selector}; 
@@ -125,7 +126,8 @@ impl UniswapV3 {
     fee: u32,
 ) -> Option<U256> {
     let calldata = encode_quote_single_exact_input(token_in, token_out, fee, amount_in);
-    let resp = connector.call_raw(self.quoter, calldata).await;
+    let from = address!("78D3FEc647f35E5D413597D217C5E0D9605acE3E"); 
+    let resp = connector.call_raw(from,self.quoter, calldata).await;
     match resp {
         Ok(bytes) => {
             if bytes.len() < 32 {

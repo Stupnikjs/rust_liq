@@ -25,12 +25,12 @@ pub struct Connector {
     pub tx_sender: Arc<TxSender>,
     pub rate_limiter: RateLimiter,
 }
-
+// address!("78D3FEc647f35E5D413597D217C5E0D9605acE3E")
 impl Connector {
-    pub async fn call_raw(&self, to: Address, data: Bytes) -> Result<Bytes, Box<dyn std::error::Error>> {
+    pub async fn call_raw(&self,from: Address,  to: Address, data: Bytes) -> Result<Bytes, Box<dyn std::error::Error>> {
         self.rate_limiter.acquire().await;
         let tx = TransactionRequest::default()
-        .from(address!("78D3FEc647f35E5D413597D217C5E0D9605acE3E"))  // change asap 
+        .from(from)  // change asap 
         .to(to)
         .input(data.into());
         Ok(self.http.call(tx).await?)
@@ -137,12 +137,13 @@ impl RateLimiter {
 impl CallRaw for Connector {
     async fn call_raw(
         &self,
+        from: Address,
         to: Address,
         data: Bytes,
     ) -> Result<Bytes, Box<dyn std::error::Error>> {
     self.rate_limiter.acquire().await;
         let tx = TransactionRequest::default()
-        .from(address!("78D3FEc647f35E5D413597D217C5E0D9605acE3E"))  // change asap 
+        .from(from)  
         .to(to)
         .input(data.into());
         Ok(self.http.call(tx).await?)

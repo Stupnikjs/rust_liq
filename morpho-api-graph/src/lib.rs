@@ -60,13 +60,6 @@ impl HttpClient {
     }
 
 
-    /*
-    le ? est un shortcut pour
-    match result {
-    Ok(v) => v,
-    Err(e) => return Err(e.into())
-    }
-     */
     pub async fn query<T: DeserializeOwned>(&self, query: &str) -> anyhow::Result<T> {
         let resp = self
             .client

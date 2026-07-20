@@ -4,6 +4,7 @@ use alloy::primitives::{Address, Bytes};
 pub trait CallRaw {
     async fn call_raw(
         &self,
+        from:Address,
         to: Address,
         data: Bytes,
     ) -> Result<Bytes, Box<dyn std::error::Error>>;

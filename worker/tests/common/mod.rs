@@ -2,8 +2,8 @@ use std::str::FromStr;
 
 use alloy::{network::{Ethereum, EthereumWallet}, providers::{Provider, ProviderBuilder}, rpc::types::TransactionRequest, signers::local::PrivateKeySigner};
 use alloy_primitives::{Address, Bytes, address, U256};
-use worker::{morpho::utils::WAD}; 
-use worker::morpho::types::MarketParam; 
+use morpho::utils::WAD; 
+use morpho::types::MarketParam; 
 
 pub const USDC:Address = address!("833589fCD6eDb6E08f4c7C32D4f71b54bdA02913");
 pub const WETH:Address = address!("0x4200000000000000000000000000000000000006") ; 
