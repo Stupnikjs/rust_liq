@@ -10,8 +10,8 @@ use alloy::serde::quantity::vec;
 use alloy_primitives::{Address, U256, FixedBytes};
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
-use crate::morpho::types::MarketParam;
-use crate::morpho::utils::WAD; 
+use morpho::types::MarketParam;
+use morpho::utils::WAD; 
 use crate::cache::parse::{fetch_parse_all_market}; 
 use morpho_api_graph::fetch_all_positions; 
 

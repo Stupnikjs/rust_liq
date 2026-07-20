@@ -7,7 +7,7 @@ use config::{Config, load_base_config};
 use connector::{Connector};
 
 use crate::cache::{MarketCache, logs::MarketLog, parse::fetch_parse_all_market};
-use crate::morpho::types::MarketParam;
+use morpho::types::MarketParam;
 
 use crate::backtest::{BacktestStore, BacktestSnapshot};
 use crate::runner::{config::load_arb_config, server::build_router}; 

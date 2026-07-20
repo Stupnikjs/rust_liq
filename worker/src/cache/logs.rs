@@ -5,8 +5,8 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use alloy_primitives::{FixedBytes, U256};
 
 use serde::{Serialize, de};
-use crate::morpho::utils::{WAD, hf_to_f64};
-use crate::morpho::types::price_normalized;   
+use morpho::utils::{WAD, hf_to_f64};
+use morpho::types::price_normalized;   
 use super::{MarketSnapshot, MarketCache};
 
 /// Largeur de chaque tranche de l'histogramme, en points de pourcentage (5 => 0.05 en HF)

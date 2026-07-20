@@ -1,0 +1,22 @@
+[package]
+name = "morpho"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+eth-core = { path = "../eth-core" }
+alloy =  {version = "2.1.0", features = [
+    "providers",
+    "rpc-types",
+    "rpc-client",
+    "rpc-client-ws",
+    "transport-ws",
+    "transport-http",
+    "signers",
+    "signer-local",
+    "network",
+    "provider-ws",
+    "pubsub",
+] }
+alloy-primitives = "1.6.0"
+anyhow = "1.0.103"

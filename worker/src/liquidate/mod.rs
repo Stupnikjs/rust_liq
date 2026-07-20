@@ -5,8 +5,9 @@ use alloy_primitives::{U256, Address};
 use encode::encode_liquidate; 
 use build::build_steps; 
 use crate::swap::PoolEdge;
-use crate::{cache::positions::BorrowPosition, morpho::types::MarketParam};
+use crate::{cache::positions::BorrowPosition};
 use connector::Connector;
+use morpho::types::MarketParam; 
 
 pub async fn liquidate(
     conn: &Connector,

@@ -1,6 +1,6 @@
 [workspace]
 members = [
-    "connector", "eth-core", "morpho-api-graph",
+    "connector", "eth-core", "morpho", "morpho-api-graph",
     "worker",
 ]
 

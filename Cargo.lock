@@ -2778,6 +2778,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "morpho"
+version = "0.1.0"
+dependencies = [
+ "alloy",
+ "alloy-primitives",
+ "anyhow",
+ "eth-core",
+]
+
+[[package]]
 name = "morpho-api-graph"
 version = "0.1.0"
 dependencies = [
@@ -4875,6 +4885,7 @@ dependencies = [
  "futures",
  "futures-util",
  "hex",
+ "morpho",
  "morpho-api-graph",
  "reqwest",
  "rusqlite",

@@ -3,7 +3,6 @@ use std::env::Args;
 use alloy::primitives::{Address, U256};
 use alloy::sol_types::sol_data::{self, FixedBytes};
 use alloy_primitives::Bytes;
-use connector::Connector; 
 use alloy::providers::Provider;
 use alloy::network::Ethereum;
 use eth_core::encode::{selector,encode_calldata}; 

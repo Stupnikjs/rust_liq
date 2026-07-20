@@ -1,8 +1,8 @@
 use std::str::FromStr;
 use alloy_primitives::{Address, FixedBytes, U256};
 use morpho_api_graph::{fetch_all_market, types::{MarketItem, PositionItem}}; 
-use crate::{cache::positions::BorrowPosition, morpho::types::MarketParam}; 
-
+use crate::{cache::positions::BorrowPosition}; 
+use morpho::types::MarketParam; 
 
 
 pub fn market_item_to_morpho_market(item: &MarketItem, chain_id: u32) -> Result<MarketParam, anyhow::Error> {
