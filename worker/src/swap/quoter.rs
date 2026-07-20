@@ -127,7 +127,7 @@ impl UniswapV3 {
 ) -> Option<U256> {
     let calldata = encode_quote_single_exact_input(token_in, token_out, fee, amount_in);
     let from = address!("78D3FEc647f35E5D413597D217C5E0D9605acE3E"); 
-    let resp = connector.call_raw(from,self.quoter, calldata).await;
+    let resp = connector.sec_call_raw(self.quoter, calldata).await;
     match resp {
         Ok(bytes) => {
             if bytes.len() < 32 {

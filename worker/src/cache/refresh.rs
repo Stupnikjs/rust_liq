@@ -1,4 +1,6 @@
 use std::time::Duration;
+use alloy_primitives::map::foldhash::fast;
+use eth_core::traits::RpcKind;
 use morpho_api_graph::fetch_all_positions; 
 use crate::cache::parse::{ position_item_to_borrow_pos}; 
 use crate::cache::{MarketCache, BorrowPosition}; 
@@ -47,13 +49,15 @@ impl MarketCache {
      pub async fn onchain_oracle_refresh(
         &self,
         conn: &Connector,
-        market_id: FixedBytes<32>,
+        rpc:RpcKind,
+        market_id: FixedBytes<32>,   
     ) -> Result<(), anyhow::Error> {
+        
         let params = self.get_market_param_by_id(market_id)
             .ok_or(anyhow::anyhow!("market not found"))?;
-         
-       let price = oracle_call(conn, params.oracle).await?;
-
+        let price = oracle_call(conn, rpc, params.oracle).await?;
+        
+        
         self.update(market_id, |m| {
             m.stats.oracle_price = price;
         });
@@ -64,10 +68,11 @@ impl MarketCache {
     pub async fn onchain_market_refresh(
         &self,
         conn: &Connector,
+        rpc:RpcKind, 
         morpho_addr:Address,
         market_id: FixedBytes<32>,
     ) -> Result<(), anyhow::Error> {
-        let m_stats_result = market_call(conn, morpho_addr, market_id.as_slice()).await?;
+        let m_stats_result = market_call(conn,rpc, morpho_addr, market_id.as_slice()).await?;
         self.update(market_id, |m| {
             m.stats.total_borrow_assets = m_stats_result.total_borrow_assets;
             m.stats.total_borrow_shares = m_stats_result.total_borrow_shares;

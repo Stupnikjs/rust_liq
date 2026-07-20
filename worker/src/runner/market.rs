@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::sync::{Arc};
 use alloy_primitives::{Address,FixedBytes};
+use eth_core::traits::RpcKind;
 use tokio::sync::RwLock; 
 use crate::backtest::{BacktestSnapshot, BacktestStore, snap_to_4_batch};
 use crate::cache::positions::BorrowPosition;
@@ -11,6 +12,9 @@ use crate::{liquidate};
 use morpho::types::{MarketParam, price_normalized}; 
 use crate::runner::Runner; 
 use std::time::{SystemTime, UNIX_EPOCH, Duration};
+
+
+const THRESHOLD:u64 = 10; 
 
 pub struct MarketLoopConsumer {
     spaming_map: HashMap<Address, u16>,
@@ -28,10 +32,16 @@ impl MarketLoopConsumer {
         let mut batch:Vec<BacktestSnapshot> = Vec::with_capacity(32);
         let mut count: u64 = 0;
         let last_sec = now_secs(); 
-            
+        let mut last_interval = 0;  
         loop {
-            let now = now_secs(); 
-            let _  = self.refresh(count, index).await; 
+            let now = now_secs();
+            let mut rpc:RpcKind = RpcKind::Main;   
+            if last_interval < THRESHOLD && rpc == RpcKind::Secondary {
+                rpc = RpcKind::Main;
+            } else if last_interval >= THRESHOLD && rpc == RpcKind::Main  {
+                rpc = RpcKind::Secondary; 
+            }
+            let _  = self.refresh(count, index, rpc).await; 
             
             let Some((snap, mparam)) = self.snapshot() else {
                         tokio::time::sleep(Duration::from_secs(3600)).await;
@@ -45,8 +55,10 @@ impl MarketLoopConsumer {
             );
             let is_correlated = is_correlated(price_norm, &mparam); 
             let (lowest, interval) = self.cache.lowest_hf_and_interval(self.id, is_correlated);
+            last_interval = interval; 
             if let (Some(pos), 0) = (lowest, interval) {
-                self.try_liquidate(pos, mparam).await; 
+                self.try_liquidate(pos, mparam).await;
+                
             }
             self.batching(&snap, &mut batch).await; 
             count += 1;
@@ -68,24 +80,27 @@ impl MarketLoopConsumer {
         }
     }
 
-    async fn refresh_oracle_and_hf(&self) {
-        let _ = self.cache.onchain_oracle_refresh(&self.connector, self.id).await;
+    async fn refresh_oracle_and_hf(&self, rpc:RpcKind) {
+        let _ = self.cache.onchain_oracle_refresh(&self.connector, rpc, self.id).await;
         self.cache.recompute_all_hf(self.id);
     }
 
-    async fn market_refresh_and_sort(&self) {
-        let _ = self
+    async fn market_refresh_and_sort(&self, rpc:RpcKind) {
+        
+            let _ = self
             .cache
-            .onchain_market_refresh(&self.connector, self.morpho_addr, self.id)
+            .onchain_market_refresh(&self.connector, rpc, self.morpho_addr, self.id)
             .await;
+        
+        
         self.cache.sort_by_hf(self.id);
     }
 
-    async fn refresh(&self, count: u64, refresh_every: u64) {
-    self.refresh_oracle_and_hf().await;
+    async fn refresh(&self, count: u64, refresh_every: u64, rpc:RpcKind) {
+    self.refresh_oracle_and_hf(rpc).await;
 
     if count % refresh_every == 0 {
-        self.market_refresh_and_sort().await;
+        self.market_refresh_and_sort(rpc).await;
     }
 }
 

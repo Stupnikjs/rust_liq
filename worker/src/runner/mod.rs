@@ -5,7 +5,7 @@ use std::sync::{Arc};
 use tokio::sync::RwLock; 
 use config::{Config, load_base_config};
 use connector::{Connector};
-
+use eth_core::traits::RpcKind; 
 use crate::cache::{MarketCache, logs::MarketLog, parse::fetch_parse_all_market};
 use morpho::types::MarketParam;
 
@@ -73,8 +73,8 @@ impl Runner {
 
         // geting oracle prices 
         for market_id in self.cache.ids() {
-            let _ = self.cache.onchain_oracle_refresh(self.connector.as_ref(), market_id).await;
-            let _ = self.cache.onchain_market_refresh(self.connector.as_ref(), self.config.morpho_addr, market_id).await;
+            let _ = self.cache.onchain_oracle_refresh(self.connector.as_ref(),RpcKind::Secondary, market_id, ).await;
+            let _ = self.cache.onchain_market_refresh(self.connector.as_ref(), RpcKind::Secondary, self.config.morpho_addr, market_id).await;
             self.cache.recompute_all_hf(market_id);  
             self.cache.sort_by_hf(market_id);
         }

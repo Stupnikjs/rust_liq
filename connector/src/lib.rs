@@ -6,7 +6,7 @@ use alloy::rpc::client::WsConnect;
 use alloy::rpc::types::{BlockNumberOrTag, Filter, Log, TransactionRequest};
 use alloy::signers::local::PrivateKeySigner;
 use alloy::primitives::{Address, Bytes, TxHash, address};
-use eth_core::traits::CallRaw; 
+use eth_core::traits::{CallRaw, RpcKind}; 
 use futures::StreamExt;
 use tx_sender::TxSender;
 use tokio::sync::Semaphore;
@@ -14,7 +14,6 @@ use tokio::time::{interval, Duration};
 
 
 mod tx_sender;
-
 
 
 
@@ -137,6 +136,7 @@ impl RateLimiter {
 impl CallRaw for Connector {
     async fn call_raw(
         &self,
+        rpc:RpcKind,
         from: Address,
         to: Address,
         data: Bytes,
@@ -146,6 +146,9 @@ impl CallRaw for Connector {
         .from(from)  
         .to(to)
         .input(data.into());
-        Ok(self.http.call(tx).await?)
+        Ok( match rpc {
+            RpcKind::Main => self.http.call(tx).await?,
+            RpcKind::Secondary => self.sec_http.call(tx).await?,
+        })
     }
 }

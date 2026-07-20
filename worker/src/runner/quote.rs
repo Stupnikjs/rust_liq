@@ -1,5 +1,6 @@
 use crate::{cache::MarketCache};
-use connector::Connector; 
+use connector::Connector;
+use eth_core::traits::RpcKind; 
 use crate::runner::{Runner, config::Config}; 
 use crate::swap::{routes::RouteCache, quoter::UniswapV3}; 
 use std::fs;
@@ -23,12 +24,12 @@ impl QuoteConsumer {
     pub async fn quote_market(&self) -> Result<(), Box<dyn std::error::Error>> {
         let _route_cache = Arc::clone(&self.route_cache);
         for id in self.cache.ids() {
-            let _ = self.cache.onchain_oracle_refresh(&self.connector, id).await; 
+            let _ = self.cache.onchain_oracle_refresh(&self.connector, RpcKind::Secondary, id).await; 
             let param = self.cache.get_market_param_by_id(id).expect("error in runner init get market param"); 
             let swaper = UniswapV3::new(
                 self.config.dexes[0].quoter, 
                 self.config.dexes[0].router, 
-                300, 
+                800, 
                 String::from_str("UNIV3")?); 
 
             let snap = self.cache.snapshot(id).expect("snap failed in quote init"); 

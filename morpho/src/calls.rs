@@ -6,7 +6,7 @@ use alloy_primitives::{Bytes, address};
 use alloy::providers::Provider;
 use alloy::network::Ethereum;
 use eth_core::encode::{selector,encode_calldata}; 
-use eth_core::traits::CallRaw;
+use eth_core::traits::{CallRaw, RpcKind};
 
 // market() call to morpho 
 
@@ -54,6 +54,7 @@ pub fn decode_market_stats(data: &[u8]) -> Result<MarketStatsCall, anyhow::Error
 
 pub async fn market_call<C>(
     conn: &C,
+    rpc:RpcKind,
     morpho_addr: Address,
     market_id: &[u8],
 ) -> Result<MarketStatsCall, anyhow::Error>
@@ -65,7 +66,7 @@ where
     let calldata = encode_calldata(selector, market_id);
     let from = address!("78D3FEc647f35E5D413597D217C5E0D9605acE3E"); 
     let resp = conn
-        .call_raw(from , morpho_addr, calldata)
+        .call_raw(rpc, from , morpho_addr, calldata)
         .await
         .map_err(|e| anyhow::anyhow!("market call failed: {:?}", e))?;
 
@@ -102,6 +103,7 @@ pub fn decode_position(data: &[u8]) -> Result<PositionCall, anyhow::Error> {
 
 pub async fn position_call<C>(
     conn: &C,
+    rpc: RpcKind,
     morpho_addr: Address,
     market_id: &[u8],
     user: Address,
@@ -123,7 +125,7 @@ pub async fn position_call<C>(
     let  calldata = encode_calldata(sel, &args);
     let from = address!("78D3FEc647f35E5D413597D217C5E0D9605acE3E"); 
     let resp = conn
-        .call_raw(from, morpho_addr, calldata)
+        .call_raw(rpc, from, morpho_addr, calldata)
         .await
         .map_err(|e| anyhow::anyhow!("position call failed: {:?}", e))?;
 
@@ -136,14 +138,14 @@ pub async fn position_call<C>(
 // price() call on oracle morpho 
 // exponent = 36 + loan_decimals - collateral_decimals
 
-pub async fn oracle_call<C>(conn: &C, oracle_addr: Address)-> Result<U256, anyhow::Error>
+pub async fn oracle_call<C>(conn: &C, rpc: RpcKind, oracle_addr: Address)-> Result<U256, anyhow::Error>
     where
         C: CallRaw
     {
     let from = address!("78D3FEc647f35E5D413597D217C5E0D9605acE3E");    
     let selector = selector("price()");
     let calldata = encode_calldata(selector, &[]);
-    let resp = conn.call_raw(from, oracle_addr, calldata).await
+    let resp = conn.call_raw(rpc, from, oracle_addr, calldata).await
         .map_err(|e| anyhow::anyhow!("oracle_call failed for {}: {:?}", oracle_addr, e))?;
     
     decode_oracle_price(&resp)
