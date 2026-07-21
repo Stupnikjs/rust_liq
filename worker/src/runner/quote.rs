@@ -29,7 +29,7 @@ impl QuoteConsumer {
             let swaper = UniswapV3::new(
                 self.config.dexes[0].quoter, 
                 self.config.dexes[0].router, 
-                800, 
+                1000, 
                 String::from_str("UNIV3")?); 
 
             let snap = self.cache.snapshot(id).expect("snap failed in quote init"); 

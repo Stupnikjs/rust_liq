@@ -68,7 +68,7 @@ impl MarketLoopConsumer {
 
 
     async fn try_liquidate(&mut self, pos:BorrowPosition, mparam:MarketParam) {
-// remplacer le std RwLock par tokio RwLock
+
         let route = self.route_cache.read().await.get_edge(&pos.market_id).cloned();
         let Some(route) = route else { return };
 

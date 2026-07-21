@@ -54,8 +54,14 @@ impl Connector {
         let sub = self.ws.subscribe_logs(&filter).await?;
         let mut stream = sub.into_stream();
         while let Some(log) = stream.next().await {
-            on_log(log);
+            if std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                on_log(log);
+            }))
+            .is_err()
+            {
+                return Err("callback panicked".into())
         }
+      }
         Err("ws log subscription stream ended".into())
     }
 

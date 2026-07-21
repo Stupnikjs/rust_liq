@@ -1,6 +1,7 @@
 use alloy::rpc::types::{Filter, Log};
 use alloy::primitives::{Address,keccak256, U256, FixedBytes};
 use alloy::eips::BlockNumberOrTag;
+use futures::future::ok;
 use crate::cache::{BorrowPosition,MarketCache};
 
 
@@ -18,26 +19,32 @@ impl MarketCache {
    
 
    pub fn process_log(&self, log: &Log) {
-    let Some(topic0) = log.topics().first() else { return };
+    let Some(topic0) = log.topics().first() else { return  };
 
     match topic0 {
         x if *x == keccak256("Borrow(bytes32,address,address,address,uint256,uint256)") => {
             self.update_borrow(log);
+          
         }
         x if *x == keccak256("Repay(bytes32,address,address,uint256,uint256)") => {
             self.update_repay(log);
+           
         }
         x if *x == keccak256("Liquidate(bytes32,address,address,uint256,uint256,uint256,uint256,uint256)") => {
             self.update_liquidate(log);
+          
         }
         x if *x == keccak256("AccrueInterest(bytes32,uint256,uint256,uint256)") => {
             self.update_accrue_interest(log);
+           
         }
         x if *x == keccak256("SupplyCollateral(bytes32,address,address,uint256)") => {
             self.update_supply_collateral(log);
+            
         }
         x if *x == keccak256("WithdrawCollateral(bytes32,address,address,address,uint256)") => {
     self.update_withdraw_collateral(log);
+   
 }
         _ => {}
     }
@@ -90,8 +97,18 @@ pub fn update_repay(&self, log: &Log) {
 pub fn update_liquidate(&self, log: &Log) {
     let market_id = FixedBytes::from(log.topics()[1]);
     let borrower = read_address(&log.topics()[3]);
+    let seized_assets = read_u256(&log.data().data, 64);
+     
     self.update(market_id, |m| {
-        m.positions.retain(|p| p.address != borrower);
+        if let Some(position) = m.positions.iter_mut().find(|p| p.address == borrower) {
+            if position.collateral_assets > seized_assets {
+                // Liquidation partielle
+                position.collateral_assets -= seized_assets;
+            } else {
+                // Liquidation totale
+                m.positions.retain(|p| p.address != borrower);
+            }
+        }
     });
 }
 

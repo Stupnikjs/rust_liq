@@ -7,6 +7,7 @@ use config::{Config, load_base_config};
 use connector::{Connector};
 use eth_core::traits::RpcKind; 
 use crate::cache::{MarketCache, logs::MarketLog, parse::fetch_parse_all_market};
+use crate::runner::config::load_katana_config;
 use morpho::types::MarketParam;
 
 use crate::backtest::{BacktestStore, BacktestSnapshot};
@@ -40,10 +41,11 @@ pub struct Runner {
 }
 
 impl Runner {
-    pub async fn new(chainid: u64) -> Result<Runner, Box<dyn Error>> {
+    pub async fn new(chainid: u64, slow_mode:bool) -> Result<Runner, Box<dyn Error>> {
         let config = match chainid {
-            8453 => load_base_config()?,
-            42161 => load_arb_config()?,
+            8453 => load_base_config(slow_mode)?,
+            42161 => load_arb_config(slow_mode)?,
+            747474 => load_katana_config(slow_mode)?,
             _ => panic!("unsupported chain {}", chainid),
         };
 
@@ -51,7 +53,7 @@ impl Runner {
         let cache = Arc::new(MarketCache::new(&[]));
         
         // Error lauching connector 
-        let conn = connector::build(&config.main_rpc, &config.second_rpc, &config.ws_rpc, config.signer.clone(), chainid, 50).await?;
+        let conn = connector::build(&config.main_rpc, &config.second_rpc, &config.ws_rpc, config.signer.clone(), chainid, 30).await?;
         let connector = Arc::new(conn);
         
         let route_cache = Arc::new(RwLock::new(RouteCache::new()));
@@ -94,7 +96,9 @@ impl Runner {
                 if let Err(e) = this
                     .connector
                     .subscribe(this.config.morpho_addr, &EVENTS_SIG, move |log| {
-                        cache.process_log(&log);
+                        cache.process_log(&log); 
+                                            
+                                         
                     })
                     .await
                 {

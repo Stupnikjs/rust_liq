@@ -44,6 +44,13 @@ pub async fn liquidate(
 }
 
     let tx_hash = conn.send_tx(liquidator_addr, calldata).await;
-
+    match tx_hash {
+        Ok(tx_hash) => {
+            println!("tx succed hash :{}", tx_hash)
+        }
+        Err(tx_err) => {
+            println!("tx failed error :{:?}", tx_err)
+        }
+    }
     // save tx_hash + ts for backtest 
 }
