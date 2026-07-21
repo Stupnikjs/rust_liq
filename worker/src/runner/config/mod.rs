@@ -60,7 +60,9 @@ pub fn load_base_config(slow_mode:bool) -> Result<Config, anyhow::Error> {
 
 pub fn load_arb_config(slow_mode:bool) -> Result<Config, anyhow::Error> {
    dotenvy::dotenv().ok();
+     
     let main_rpc = if slow_mode {
+        println!("slow mode on "); 
         var("DRPC_ARB_HTTP").expect("DRPC_ARB_HTTP not set")
     } else { var("ALCHEMY_BASE_HTTP").expect("ALCHEMY_BASE_HTTP not set") }; 
     let sec_rpc = if slow_mode {
