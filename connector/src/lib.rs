@@ -158,3 +158,7 @@ impl CallRaw for Connector {
         })
     }
 }
+
+
+
+// keep track of err in RPC 
