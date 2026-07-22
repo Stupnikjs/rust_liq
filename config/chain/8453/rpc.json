@@ -1,0 +1,103 @@
+[
+    {
+      "url": "${DRPC_BASE_HTTP}",
+      "tier": "Top",
+      "min_interval_ms": 200
+    },
+    {
+      "url": "${CHAINSTACK_BASE_HTTP}",
+      "tier": "Top",
+      "min_interval_ms": 200
+    },
+
+    {
+      "url": "https://rpc.baseazul.dev",
+      "tier": "Garbage",
+      "min_interval_ms": 20000
+    },
+    {
+      "url": "https://base-rpc.publicnode.com",
+      "tier": "Garbage",
+      "min_interval_ms": 20000
+    },
+    {
+      "url": "https://base-mainnet.gateway.tatum.io",
+      "tier": "Garbage",
+      "min_interval_ms": 20000
+    },
+    {
+      "url": "https://base.drpc.org",
+      "tier": "Garbage",
+      "min_interval_ms": 20000
+    },
+    {
+      "url": "https://rpc.nodeflare.app/base/public",
+      "tier": "Garbage",
+      "min_interval_ms": 20000
+    },
+    {
+      "url": "https://base.public.blockpi.network/v1/rpc/public",
+      "tier": "Garbage",
+      "min_interval_ms": 20000
+    },
+    {
+      "url": "https://base.lava.build",
+      "tier": "Garbage",
+      "min_interval_ms": 20000
+    },
+    {
+      "url": "https://base-rpc.keccak.io",
+      "tier": "Garbage",
+      "min_interval_ms": 20000
+    },
+    {
+      "url": "https://api.zan.top/base-mainnet",
+      "tier": "Garbage",
+      "min_interval_ms": 20000
+    },
+    {
+      "url": "https://gateway.tenderly.co/public/base",
+      "tier": "Garbage",
+      "min_interval_ms": 20000
+    },
+    {
+      "url": "https://base.gateway.tenderly.co",
+      "tier": "Garbage",
+      "min_interval_ms": 20000
+    },
+    {
+      "url": "https://base-mainnet.public.blastapi.io",
+      "tier": "Garbage",
+      "min_interval_ms": 20000
+    },
+    {
+      "url": "https://base.rpc.blxrbdn.com",
+      "tier": "Garbage",
+      "min_interval_ms": 20000
+    },
+    {
+      "url": "https://base-public.nodies.app",
+      "tier": "Garbage",
+      "min_interval_ms": 20000
+    },
+    {
+      "url": "https://base.meowrpc.com",
+      "tier": "Garbage",
+      "min_interval_ms": 20000
+    },
+    {
+      "url": "https://mainnet.base.org",
+      "tier": "Garbage",
+      "min_interval_ms": 20000
+    },
+    {
+      "url": "https://developer-access-mainnet.base.org",
+      "tier": "Garbage",
+      "min_interval_ms": 20000
+    },
+    {
+      "url": "https://base.rpc.sentio.xyz",
+      "tier": "Garbage",
+      "min_interval_ms": 20000
+    }
+  ]
