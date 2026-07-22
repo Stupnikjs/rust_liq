@@ -26,7 +26,7 @@ pub struct Connector {
 // address!("78D3FEc647f35E5D413597D217C5E0D9605acE3E")
 impl Connector {
     pub async fn call_raw(&self, top_tier:bool, from: Address, to: Address, data: Bytes) -> Result<Bytes, Box<dyn std::error::Error>> {
-        let ep = if top_tier { self.pool.acquire_top_tier().await } else {self.pool.acquire().await}; 
+        let ep = if top_tier { self.pool.acquire_top_tier().await } else {self.pool.acquire().await?}; 
         let tx = TransactionRequest::default().from(from).to(to).input(data.into());
         match ep.provider.call(tx).await {
         Ok(bytes) => {
@@ -109,7 +109,7 @@ impl CallRaw for Connector {
         to: Address,
         data: Bytes,
     ) -> Result<Bytes, Box<dyn std::error::Error>> {
-        let ep = if top_tier {self.pool.acquire_top_tier().await} else {self.pool.acquire().await }; 
+        let ep = if top_tier {self.pool.acquire_top_tier().await} else {self.pool.acquire().await ?}; 
         let tx = TransactionRequest::default().from(from).to(to).input(data.into());
         match ep.provider.call(tx).await {
         Ok(bytes) => {
