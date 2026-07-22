@@ -90,7 +90,7 @@ impl  RpcPool {
 
     pub async fn acquire(&self) -> anyhow::Result<&Arc<RpcEndpoint>> {
     tokio::time::timeout(
-        Duration::from_secs(5),
+        Duration::from_secs(2),
         async {
             loop {
                 if let Some(ep) = self.endpoints
@@ -109,15 +109,19 @@ impl  RpcPool {
     .map_err(|_| anyhow::anyhow!("no rpc available"))
     }
 
+
     /// Pour les appels critiques (tx, receipt) : jamais les garbage endpoints.
-    pub async fn acquire_top_tier(&self) -> &RpcEndpoint {
-        
+    pub async fn acquire_top_tier(&self) -> anyhow::Result<&Arc<RpcEndpoint>> {
+        tokio::time::timeout(
+        Duration::from_secs(2),
+        async {
         loop {
             if let Some(ep) = self.endpoints.iter().filter(|e| e.tier == Tier::Top).find(|e| e.try_reserve()) {
                 return ep;
             }
             tokio::time::sleep(Duration::from_millis(20)).await;
         }
+    }).await
+    .map_err(|_| anyhow::anyhow!("no top tier rpc available"))
     }
-   
 }

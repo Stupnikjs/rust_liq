@@ -1,5 +1,7 @@
 use alloy::primitives::{Address, Bytes};
 
+use crate::utils::BoxError;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RpcKind {
     Main,
@@ -15,5 +17,5 @@ pub trait CallRaw {
         from: Address,
         to: Address,
         data: Bytes,
-    ) -> Result<Bytes, Box<dyn std::error::Error>>;
+    ) -> Result<Bytes, BoxError>;
 }

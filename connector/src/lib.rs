@@ -7,6 +7,7 @@ use alloy::rpc::types::{BlockNumberOrTag, Filter, Log, TransactionRequest};
 use alloy::signers::local::PrivateKeySigner;
 use alloy::primitives::{Address, Bytes, TxHash, address};
 use eth_core::traits::{CallRaw, RpcKind}; 
+use eth_core::utils::BoxError;
 use futures::StreamExt;
 use tx_sender::TxSender;
 use rpc::{RpcPool, RpcEndpoint};
@@ -25,20 +26,49 @@ pub struct Connector {
 }
 // address!("78D3FEc647f35E5D413597D217C5E0D9605acE3E")
 impl Connector {
-    pub async fn call_raw(&self, top_tier:bool, from: Address, to: Address, data: Bytes) -> Result<Bytes, Box<dyn std::error::Error>> {
-        let ep = if top_tier { self.pool.acquire_top_tier().await } else {self.pool.acquire().await?}; 
-        let tx = TransactionRequest::default().from(from).to(to).input(data.into());
-        match ep.provider.call(tx).await {
-        Ok(bytes) => {
-            ep.register_success();
-            Ok(bytes)
-        }
-        Err(err) => {
-            ep.register_failure();
-            Err(err.into())
+    pub async fn call_raw(&self, top_tier: bool, from: Address, to: Address, data: Bytes) -> Result<Bytes, Box<dyn std::error::Error>> {
+    const MAX_RETRIES: u32 = 3;
+    let tx = TransactionRequest::default().from(from).to(to).input(data.into());
+
+    let mut last_err: Option<Box<dyn std::error::Error>> = None;
+
+    for attempt in 0..MAX_RETRIES {
+        let ep = if top_tier {
+            match self.pool.acquire_top_tier().await {
+                Ok(ep) => ep,
+                Err(_) => match self.pool.acquire().await {
+                    Ok(ep) => ep,
+                    Err(_) => {
+                        tokio::time::sleep(Duration::from_secs(2)).await;
+                        continue;
+                    }
+                },
+            }
+        } else {
+            match self.pool.acquire().await {
+                Ok(ep) => ep,
+                Err(_) => {
+                    tokio::time::sleep(Duration::from_secs(2)).await;
+                    continue;
+                }
+            }
+        };
+
+        match ep.provider.call(tx.clone()).await {
+            Ok(bytes) => {
+                ep.register_success();
+                return Ok(bytes);
+            }
+            Err(err) => {
+                ep.register_failure();
+                last_err = Some(err.into());
+            }
         }
     }
+
+        Err(last_err.unwrap_or_else(|| "no rpc endpoint available after retries".into()))
     }
+
     
 
     
@@ -67,7 +97,7 @@ impl Connector {
     }
 
     pub async fn send_tx(&self, to: Address, data: Bytes) -> Result<TxHash, Box<dyn std::error::Error>> {
-        self.tx_sender.send_tx(&self.pool.acquire_top_tier().await.provider, to, data).await
+        self.tx_sender.send_tx(&self.pool.acquire_top_tier().await.unwrap().provider, to, data).await
     }
 }
 
@@ -88,7 +118,7 @@ pub async fn build(
 
     // le tx_sender s'appuie sur un endpoint top-tier dès l'init
     let init_ep = pool.acquire_top_tier().await;
-    let tx_sender = Arc::new(TxSender::init(&init_ep.provider, signer, chain_id).await?);
+    let tx_sender = Arc::new(TxSender::init(&init_ep.unwrap().provider, signer, chain_id).await?);
     tx_sender.spawn_base_fee_updater(Arc::clone(&ws));
 
     Ok(Connector { pool, ws, tx_sender })
@@ -108,8 +138,8 @@ impl CallRaw for Connector {
         from: Address,
         to: Address,
         data: Bytes,
-    ) -> Result<Bytes, Box<dyn std::error::Error>> {
-        let ep = if top_tier {self.pool.acquire_top_tier().await} else {self.pool.acquire().await ?}; 
+    ) -> Result<Bytes, BoxError> {
+        let ep = if top_tier {self.pool.acquire_top_tier().await.unwrap()} else {self.pool.acquire().await.unwrap()}; 
         let tx = TransactionRequest::default().from(from).to(to).input(data.into());
         match ep.provider.call(tx).await {
         Ok(bytes) => {

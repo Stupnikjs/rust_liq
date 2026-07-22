@@ -3,7 +3,8 @@ pub mod build;
 
 use alloy_primitives::{Address, U256, address};
 use encode::encode_liquidate; 
-use build::build_steps; 
+use build::build_steps;
+use eth_core::utils::BoxError; 
 use crate::swap::PoolEdge;
 use crate::{cache::positions::BorrowPosition};
 use connector::Connector;
@@ -15,14 +16,14 @@ pub async fn liquidate(
     route: PoolEdge,
     mparam: MarketParam,
     liquidator_addr: Address,
-) {
+) -> Result<(), BoxError>  {
     let swap_steps: Vec<PoolEdge> = vec![route.clone()];
 
     let steps = match build_steps(&swap_steps, liquidator_addr) {
         Ok(steps) => steps,
         Err(e) => {
             eprintln!("error build step {}", e);
-            return;
+            return Ok(());
         }
     };
    let wc_amount_in = route.wc_amount_in; 
@@ -39,17 +40,19 @@ pub async fn liquidate(
     }
     Err(e) => {
         eprintln!("simulation failed for {:?}: {}", pos.market_id, e);
-        return;
+        return Ok(());
     }
 }
 
     let tx_hash = conn.send_tx(liquidator_addr, calldata).await;
     match tx_hash {
         Ok(tx_hash) => {
-            println!("tx succed hash :{}", tx_hash)
+            println!("tx succed hash :{}", tx_hash); 
+            Ok(())
         }
         Err(tx_err) => {
-            println!("tx failed error :{:?}", tx_err)
+            println!("tx failed error :{:?}", tx_err); 
+            Ok(())
         }
     }
     // save tx_hash + ts for backtest 

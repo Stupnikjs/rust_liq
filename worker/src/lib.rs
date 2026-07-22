@@ -6,6 +6,7 @@ use std::sync::Arc;
 
 pub mod cache; 
 pub mod runner; 
+pub mod config;
 pub mod swap;
 pub mod liquidate;
 pub mod backtest;

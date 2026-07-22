@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::sync::{Arc};
 use alloy_primitives::{Address,FixedBytes};
 use eth_core::traits::RpcKind;
+use eth_core::utils::BoxError;
 use tokio::sync::RwLock; 
 use crate::backtest::{BacktestSnapshot, BacktestStore, snap_to_4_batch};
 use crate::cache::positions::BorrowPosition;
@@ -27,50 +28,60 @@ pub struct MarketLoopConsumer {
     backest:Arc<BacktestStore>,
 }
 
+// TO FIX
 impl MarketLoopConsumer {
-    pub async fn run(mut self,index: u64) {
-        let mut batch:Vec<BacktestSnapshot> = Vec::with_capacity(32);
+        pub async fn run(mut self, index: u64) -> Result<(), BoxError> {
+        let mut batch: Vec<BacktestSnapshot> = Vec::with_capacity(32);
         let mut count: u64 = 0;
-        let last_sec = now_secs(); 
-        let mut last_interval = 0;  
+        let mut last_interval = 0;
+
         loop {
-            let now = now_secs();
-            let mut rpc:RpcKind = RpcKind::Main;   
-            if last_interval < THRESHOLD && rpc == RpcKind::Secondary {
-                rpc = RpcKind::Main;
-            } else if last_interval >= THRESHOLD && rpc == RpcKind::Main  {
-                rpc = RpcKind::Secondary; 
+            // rpc doit persister d'un tour à l'autre : champ sur self, pas variable locale
+            if last_interval < THRESHOLD && self.current_rpc == RpcKind::Secondary {
+                self.current_rpc = RpcKind::Main;
+            } else if last_interval >= THRESHOLD && self.current_rpc == RpcKind::Main {
+                self.current_rpc = RpcKind::Secondary;
             }
-            let _  = self.refresh(count, index, rpc).await; 
-            
+
+            if let Err(err) = self.refresh(count, index, self.current_rpc).await {
+                tracing::warn!(?err, market_id = ?self.id, "refresh failed, using stale snapshot");
+            }
+
             let Some((snap, mparam)) = self.snapshot() else {
-                        tokio::time::sleep(Duration::from_secs(3600)).await;
-                        continue;
-                };
-           
+                tokio::time::sleep(Duration::from_secs(3600)).await;
+                continue;
+            };
+
             let price_norm = price_normalized(
                 mparam.loan_token_decimals,
                 mparam.collateral_token_decimals,
                 snap.stats.oracle_price,
             );
-            let is_correlated = is_correlated(price_norm, &mparam); 
+            let is_correlated = is_correlated(price_norm, &mparam);
             let (lowest, interval) = self.cache.lowest_hf_and_interval(self.id, is_correlated);
-            last_interval = interval; 
+            last_interval = interval;
+
             if let (Some(pos), 0) = (lowest, interval) {
-                self.try_liquidate(pos, mparam).await;
-                
+                if let Err(err) = self.try_liquidate(pos, mparam).await {
+                    tracing::error!(?err, market_id = ?self.id, "liquidation attempt failed");
+                }
             }
-            self.batching(&snap, &mut batch).await; 
+
+            if let Err(err) = self.batching(&snap, &mut batch).await {
+                tracing::warn!(?err, market_id = ?self.id, "batching failed");
+            }
+
             count += 1;
             tokio::time::sleep(Duration::from_secs(interval)).await;
         }
     }
 
 
-    async fn try_liquidate(&mut self, pos:BorrowPosition, mparam:MarketParam) {
+
+    async fn try_liquidate(&mut self, pos:BorrowPosition, mparam:MarketParam) -> Result<(), BoxError>  {
 
         let route = self.route_cache.read().await.get_edge(&pos.market_id).cloned();
-        let Some(route) = route else { return };
+        let Some(route) = route else { return Ok(()) };
 
         let attempts = self.spaming_map.entry(pos.address).or_default();
         if *attempts < 20 {
@@ -78,6 +89,8 @@ impl MarketLoopConsumer {
             liquidate::liquidate(&self.connector, pos, route, mparam.clone(), self.liquidator_addr).await;
             
         }
+        Ok(())
+
     }
 
     async fn refresh_oracle_and_hf(&self, rpc:RpcKind) {
@@ -104,13 +117,14 @@ impl MarketLoopConsumer {
     }
 }
 
-    async fn batching(& mut self, snap:&MarketSnapshot, batch: &mut Vec<BacktestSnapshot>,) {
+    async fn batching(& mut self, snap:&MarketSnapshot, batch: &mut Vec<BacktestSnapshot>,) -> Result<(), BoxError>{
             let to_push_in_batch = snap_to_4_batch(snap);
             batch.extend_from_slice(to_push_in_batch.as_slice());
             if batch.len() >= 32 {
                 let _ = self.backest.push_snapshot(batch).await;
                 batch.clear();
-            }
+            } 
+            Ok(())
     }
         fn snapshot(
     &self,

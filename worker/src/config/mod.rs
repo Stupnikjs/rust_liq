@@ -9,6 +9,7 @@ use std::time::Duration;
 use crate::runner;
 use connector::rpc::{Tier, RpcEndpoint}; 
 
+
 mod address; 
 
 
@@ -23,6 +24,7 @@ pub enum DexesName {
     Pankake, 
     Aerodrome,  
 }
+
 pub struct Config {
     pub chain_id: u32,
     pub rpc_configs: Vec<Arc<RpcEndpoint>>,
@@ -211,8 +213,8 @@ pub fn new_dex_config(quoter: Address, router: Address, name: DexesName) -> DexC
         chain_id: 8453,
         rpc_configs: rpc_config,
         ws_rpc: var("DRPC_BASE_WS")?,
-        morpho_addr: runner::config::address::MORPHO_MAINNET,
-        liquidator_addr: runner::config::address::BASE_LIQUIDATOR_LAST,
+        morpho_addr: address::MORPHO_MAINNET,
+        liquidator_addr: address::BASE_LIQUIDATOR_LAST,
         dexes: vec![
             new_dex_config(
                 address::BASE_UNISWAP_QUOTER_V2,
@@ -270,4 +272,19 @@ pub fn load_katana_config(slow_mode:bool) -> Result<Config, anyhow::Error> {
         signer: PrivateKeySigner::from_str(&var("MY_SAFE_PK").expect("PK NOT SET"))?,
         
     })
-}*/
+}
+
+
+pub fn parse_config(chain_id: u64) -> Config {
+     
+     Config { chain_id: (), rpc_configs: (), ws_rpc: (), morpho_addr: (), liquidator_addr: (), dexes: (), signer: () }
+}
+
+pub fn load_json(path:String) -> Config {
+let json = fs::read_to_string(path)?;
+   Ok(serde_json::from_str(&json)?)
+}
+
+   */
+
+     
