@@ -139,7 +139,7 @@ pub fn update_supply_collateral(&self, log: &Log) {
     });
 
     if found.unwrap_or(false) {
-        self.recompute_all_hf(market_id);
+        let _ = self.recompute_all_hf(market_id);
     } else {
         let pos = BorrowPosition {
             address: on_behalf,
@@ -150,7 +150,7 @@ pub fn update_supply_collateral(&self, log: &Log) {
             onchain_checked: false,
             borrow_assets_usd: 0.0, // be careful
         };
-        self.recompute_all_hf(market_id); // hf des autres positions à jour si besoin
+        let _ = self.recompute_all_hf(market_id); // hf des autres positions à jour si besoin
         self.insert_pos(&pos);
     }
 }
@@ -167,7 +167,7 @@ pub fn update_withdraw_collateral(&self, log: &Log) {
         }
     });
 
-    self.recompute_all_hf(market_id);
+   let _ =  self.recompute_all_hf(market_id);
 }
 
 }

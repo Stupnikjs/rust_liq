@@ -1,11 +1,12 @@
 use alloy_primitives::{FixedBytes, U256};
 use crate::cache::{MarketCache, positions::BorrowPosition};
 use morpho::utils::{WAD}; 
+use eth_core::utils::BoxError; 
 
 
 impl MarketCache {
     
-    pub fn recompute_all_hf(&self, id: FixedBytes<32>) {
+    pub fn recompute_all_hf(&self, id: FixedBytes<32>) -> Result<(), BoxError>{
         let snap = self.snapshot(id).expect("snap not found");
         let mparam = self.get_market_param_by_id(id).expect("market param not found");
 
@@ -26,9 +27,10 @@ impl MarketCache {
 
        _ = self.update(id, |m| {
         m.positions = updated; 
-       })
+       });  
+       Ok(())
     }
-    pub fn sort_by_hf(&self, id: FixedBytes<32>) {
+    pub fn sort_by_hf(&self, id: FixedBytes<32>) -> Result<(), BoxError> {
     _ = self.update(id, |m| {
         m.positions.sort_by(|a, b| {
             match (a.cached_hf, b.cached_hf) {
@@ -39,6 +41,7 @@ impl MarketCache {
             }
         });
     });
+    Ok(())
 }
     pub fn lowest_hf_and_interval(&self, id: FixedBytes<32>, is_correlated: bool) -> (Option<BorrowPosition>, u64) {
     let Some(snap) = self.snapshot(id) else {

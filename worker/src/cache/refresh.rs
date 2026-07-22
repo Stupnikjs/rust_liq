@@ -1,7 +1,7 @@
 use std::time::Duration;
 use alloy::dyn_abi::DynSolType::Uint;
 use alloy_primitives::map::foldhash::fast;
-use eth_core::traits::RpcKind;
+use eth_core::utils::BoxError;
 use morpho_api_graph::fetch_all_positions; 
 use crate::cache::parse::{ position_item_to_borrow_pos}; 
 use crate::cache::{MarketCache, BorrowPosition}; 
@@ -50,18 +50,15 @@ impl MarketCache {
      pub async fn onchain_oracle_refresh(
         &self,
         conn: &Connector,
-        rpc:RpcKind,
+        tier:u8,
         market_id: FixedBytes<32>,   
-    ) -> Result<(), anyhow::Error> {
+    ) -> Result<(), BoxError> {
         
         let params = self.get_market_param_by_id(market_id)
             .ok_or(anyhow::anyhow!("market not found"))?;
-        let price = oracle_call(conn, rpc, params.oracle).await?;
+        let price = oracle_call(conn, tier, params.oracle).await?;
         if price.is_zero() {
-        return Err(anyhow::anyhow!(
-            "oracle returned price 0 for market {:?} (oracle addr {:?})",
-            market_id, params.oracle
-        ));
+        return Err(BoxError::from("error onchain oracle refresh"));
         }
         
         self.update(market_id, |m| {
@@ -74,11 +71,11 @@ impl MarketCache {
     pub async fn onchain_market_refresh(
         &self,
         conn: &Connector,
-        rpc:RpcKind, 
+        tier:u8, 
         morpho_addr:Address,
         market_id: FixedBytes<32>,
     ) -> Result<(), anyhow::Error> {
-        let m_stats_result = market_call(conn,rpc, morpho_addr, market_id.as_slice()).await?;
+        let m_stats_result = market_call(conn,tier, morpho_addr, market_id.as_slice()).await?;
         self.update(market_id, |m| {
             m.stats.total_borrow_assets = m_stats_result.total_borrow_assets;
             m.stats.total_borrow_shares = m_stats_result.total_borrow_shares;

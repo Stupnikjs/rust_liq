@@ -1,3 +1,4 @@
+use eth_core::utils::BoxError;
 use rusqlite::{params, Connection};
 use serde::Serialize;
 use tokio::sync::mpsc;
@@ -93,9 +94,10 @@ impl BacktestStore {
         Ok(Self { tx, db_path:db_path_for_conn })
     }
 
-    pub async fn push_snapshot(&self, batch: &Vec<BacktestSnapshot>) -> anyhow::Result<()> {
-        self.tx.send(batch.to_vec()).await
-            .map_err(|_| anyhow::anyhow!("backtest writer task fermée"))
+    pub async fn push_snapshot(&self, batch: &Vec<BacktestSnapshot>) -> Result<(), BoxError> {
+        let _ = self.tx.send(batch.to_vec()).await
+            .map_err(|_| anyhow::anyhow!("backtest writer task fermée")); 
+            Ok(())
     }
 
     fn write_batch(conn: Connection, batch: Vec<BacktestSnapshot>) -> anyhow::Result<Connection> {

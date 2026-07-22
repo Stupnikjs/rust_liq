@@ -6,7 +6,7 @@ use alloy::rpc::client::WsConnect;
 use alloy::rpc::types::{BlockNumberOrTag, Filter, Log, TransactionRequest};
 use alloy::signers::local::PrivateKeySigner;
 use alloy::primitives::{Address, Bytes, TxHash, address};
-use eth_core::traits::{CallRaw, RpcKind}; 
+use eth_core::traits::{CallRaw }; 
 use eth_core::utils::BoxError;
 use futures::StreamExt;
 use tx_sender::TxSender;
@@ -26,11 +26,10 @@ pub struct Connector {
 }
 // address!("78D3FEc647f35E5D413597D217C5E0D9605acE3E")
 impl Connector {
-    pub async fn call_raw(&self, top_tier: bool, from: Address, to: Address, data: Bytes) -> Result<Bytes, Box<dyn std::error::Error>> {
+    pub async fn call_raw(&self, top_tier: bool, from: Address, to: Address, data: Bytes) -> Result<Bytes, BoxError> {
     const MAX_RETRIES: u32 = 3;
     let tx = TransactionRequest::default().from(from).to(to).input(data.into());
 
-    let mut last_err: Option<Box<dyn std::error::Error>> = None;
 
     for attempt in 0..MAX_RETRIES {
         let ep = if top_tier {
@@ -61,12 +60,11 @@ impl Connector {
             }
             Err(err) => {
                 ep.register_failure();
-                last_err = Some(err.into());
             }
         }
     }
 
-        Err(last_err.unwrap_or_else(|| "no rpc endpoint available after retries".into()))
+        Err(BoxError::from("max retry reached "))
     }
 
     
@@ -134,12 +132,12 @@ pub async fn build(
 impl CallRaw for Connector {
     async fn call_raw(
         &self,
-        top_tier:bool, 
+        tier:u8, 
         from: Address,
         to: Address,
         data: Bytes,
     ) -> Result<Bytes, BoxError> {
-        let ep = if top_tier {self.pool.acquire_top_tier().await.unwrap()} else {self.pool.acquire().await.unwrap()}; 
+        let ep = if tier == 0 {self.pool.acquire_top_tier().await.unwrap()} else {self.pool.acquire().await.unwrap()}; 
         let tx = TransactionRequest::default().from(from).to(to).input(data.into());
         match ep.provider.call(tx).await {
         Ok(bytes) => {

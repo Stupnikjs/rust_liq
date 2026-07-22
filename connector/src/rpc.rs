@@ -7,7 +7,7 @@ use alloy::rpc::client::WsConnect;
 use alloy::rpc::types::{BlockNumberOrTag, Filter, Log, TransactionRequest};
 use alloy::signers::local::PrivateKeySigner;
 use alloy::primitives::{Address, Bytes, TxHash, address};
-use eth_core::traits::{CallRaw, RpcKind}; 
+use eth_core::traits::{CallRaw}; 
 use futures::StreamExt;
 use tokio::sync::{Semaphore};
 use tokio::time::{interval, Duration};

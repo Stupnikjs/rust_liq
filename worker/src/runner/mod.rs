@@ -5,7 +5,6 @@ use std::sync::{Arc};
 use tokio::sync::RwLock; 
 use crate::config::{Config, load_base_config};
 use connector::{Connector};
-use eth_core::traits::RpcKind; 
 use crate::cache::{MarketCache, logs::MarketLog, parse::fetch_parse_all_market};
 //use crate::runner::config::load_katana_config;
 use morpho::types::MarketParam;
@@ -74,10 +73,10 @@ impl Runner {
 
         // geting oracle prices 
         for market_id in self.cache.ids() {
-            let _ = self.cache.onchain_oracle_refresh(self.connector.as_ref(),RpcKind::Secondary, market_id, ).await;
-            let _ = self.cache.onchain_market_refresh(self.connector.as_ref(), RpcKind::Secondary, self.config.morpho_addr, market_id).await;
-            self.cache.recompute_all_hf(market_id);  
-            self.cache.sort_by_hf(market_id);
+            let _ = self.cache.onchain_oracle_refresh(self.connector.as_ref(),1, market_id, ).await;
+            let _ = self.cache.onchain_market_refresh(self.connector.as_ref(), 1, self.config.morpho_addr, market_id).await;
+           let _ =  self.cache.recompute_all_hf(market_id);  
+           let _ =  self.cache.sort_by_hf(market_id);
         }
 
         self.quote_market().await; 
@@ -119,7 +118,7 @@ impl Runner {
         let this = Arc::clone(&self);
         tokio::spawn(async move {
             print!("spawning markets"); 
-            this.market_loop().await;
+            let _ = this.market_loop().await;
         })
     };
 
