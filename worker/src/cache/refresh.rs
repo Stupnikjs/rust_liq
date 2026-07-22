@@ -1,4 +1,5 @@
 use std::time::Duration;
+use alloy::dyn_abi::DynSolType::Uint;
 use alloy_primitives::map::foldhash::fast;
 use eth_core::traits::RpcKind;
 use morpho_api_graph::fetch_all_positions; 
@@ -56,7 +57,12 @@ impl MarketCache {
         let params = self.get_market_param_by_id(market_id)
             .ok_or(anyhow::anyhow!("market not found"))?;
         let price = oracle_call(conn, rpc, params.oracle).await?;
-        
+        if price.is_zero() {
+        return Err(anyhow::anyhow!(
+            "oracle returned price 0 for market {:?} (oracle addr {:?})",
+            market_id, params.oracle
+        ));
+        }
         
         self.update(market_id, |m| {
             m.stats.oracle_price = price;

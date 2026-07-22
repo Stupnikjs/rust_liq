@@ -20,13 +20,8 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
     std::process::exit(1);
     });
 
-    let mode = std::env::args().nth(2).unwrap_or_else(|| {
-    eprintln!("missing <mode>"); 
-    std::process::exit(1);
-    });
-     
     let chainint:u64 = chain.parse()?;
-    let mut runner  = runner::Runner::new(chainint, mode == "slow").await.expect("failed runner new func");
+    let mut runner  = runner::Runner::new(chainint).await.expect("failed runner new func");
     runner.init().await.expect(""); 
     let runner = Arc::new(runner);
    tokio::select! {

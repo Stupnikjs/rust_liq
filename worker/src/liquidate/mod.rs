@@ -33,7 +33,7 @@ pub async fn liquidate(
 
     let calldata = encode_liquidate(&mparam, pos.address, seized_assets, U256::ZERO, steps, U256::ZERO);
     let from = address!("78D3FEc647f35E5D413597D217C5E0D9605acE3E"); 
-    match conn.call_raw(from, liquidator_addr, calldata.clone()).await {
+    match conn.call_raw(true, from, liquidator_addr, calldata.clone()).await {
     Ok(_) => {
         // simulation OK, on peut envoyer
     }

@@ -7,11 +7,11 @@ use config::{Config, load_base_config};
 use connector::{Connector};
 use eth_core::traits::RpcKind; 
 use crate::cache::{MarketCache, logs::MarketLog, parse::fetch_parse_all_market};
-use crate::runner::config::load_katana_config;
+//use crate::runner::config::load_katana_config;
 use morpho::types::MarketParam;
 
 use crate::backtest::{BacktestStore, BacktestSnapshot};
-use crate::runner::{config::load_arb_config, server::build_router}; 
+use crate::runner::{server::build_router}; 
 use crate::swap::routes::RouteCache;
 
 mod api; 
@@ -41,19 +41,18 @@ pub struct Runner {
 }
 
 impl Runner {
-    pub async fn new(chainid: u64, slow_mode:bool) -> Result<Runner, Box<dyn Error>> {
+    pub async fn new(chainid: u64) -> Result<Runner, Box<dyn Error>> {
         let config = match chainid {
-            8453 => load_base_config(slow_mode)?,
-            42161 => load_arb_config(slow_mode)?,
-            747474 => load_katana_config(slow_mode)?,
+            8453 => load_base_config()?,
+           // 42161 => load_arb_config(slow_mode)?,
+           // 747474 => load_katana_config(slow_mode)?,
             _ => panic!("unsupported chain {}", chainid),
         };
 
         let config = Arc::new(config);
         let cache = Arc::new(MarketCache::new(&[]));
-        
-        // Error lauching connector 
-        let conn = connector::build(&config.main_rpc, &config.second_rpc, &config.ws_rpc, config.signer.clone(), chainid, 30).await?;
+        let rpc_configs = config.rpc_configs.clone(); 
+        let conn = connector::build(rpc_configs, &config.ws_rpc, config.signer.clone(), chainid).await?;
         let connector = Arc::new(conn);
         
         let route_cache = Arc::new(RwLock::new(RouteCache::new()));

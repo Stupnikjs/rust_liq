@@ -105,7 +105,6 @@ impl MarketLoopConsumer {
 }
 
     async fn batching(& mut self, snap:&MarketSnapshot, batch: &mut Vec<BacktestSnapshot>,) {
-        
             let to_push_in_batch = snap_to_4_batch(snap);
             batch.extend_from_slice(to_push_in_batch.as_slice());
             if batch.len() >= 32 {

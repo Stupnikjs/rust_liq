@@ -11,7 +11,7 @@ pub enum RpcKind {
 pub trait CallRaw {
     async fn call_raw(
         &self,
-        rpc: RpcKind,
+        top_tier: bool, 
         from: Address,
         to: Address,
         data: Bytes,
