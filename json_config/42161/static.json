@@ -1,0 +1,43 @@
+{
+  "chain_id": 42161,
+  "morpho_addr": "0x6c247b1F6182318877311737BaC0844bAa518F5e",
+  "liquidator_addr": "0x2661C239C38AaB0d333Be91F999F7E69dD706504",
+  "premium_rpc_env_vars": ["DRPC_ARB_HTTP", "ANKR_ARB_HTTP"],
+  "premium_timeout_ms": 200,
+  "public_rpcs": [
+    { "url": "https://arb1.arbitrum.io/rpc", "timeout_secs": 20 },
+    { "url": "https://arbitrum.publicnode.com", "timeout_secs": 20 },
+    { "url": "https://arbitrum.drpc.org", "timeout_secs": 20 },
+    { "url": "https://arbitrum.llamarpc.com", "timeout_secs": 20 },
+    { "url": "https://1rpc.io/arb", "timeout_secs": 20 },
+    { "url": "https://rpc.ankr.com/arbitrum", "timeout_secs": 20 },
+    { "url": "https://arbitrum.meowrpc.com", "timeout_secs": 20 },
+    { "url": "https://arbitrum.blockpi.network/v1/rpc/public", "timeout_secs": 20 },
+    { "url": "https://arb-pokt.nodies.app", "timeout_secs": 20 },
+     { "url": "https://arb1.arbitrum.io/rpc", "timeout_secs": 20 },
+  { "url": "https://arbitrum.publicnode.com", "timeout_secs": 20 },
+  { "url": "https://arbitrum.drpc.org", "timeout_secs": 20 },
+  { "url": "https://arbitrum.llamarpc.com", "timeout_secs": 20 },
+  { "url": "https://1rpc.io/arb", "timeout_secs": 20 },
+  { "url": "https://rpc.ankr.com/arbitrum", "timeout_secs": 20 },
+  { "url": "https://arbitrum.meowrpc.com", "timeout_secs": 20 },
+  { "url": "https://arbitrum.blockpi.network/v1/rpc/public", "timeout_secs": 20 },
+  { "url": "https://arb-pokt.nodies.app", "timeout_secs": 20 },
+  { "url": "https://arb1.lava.build", "timeout_secs": 20 },
+  { "url": "wss://arbitrum.drpc.org", "timeout_secs": 20 },
+  { "url": "https://api.zan.top/arb-one", "timeout_secs": 20 },
+  { "url": "https://arb-one.api.pocket.network", "timeout_secs": 20 },
+  { "url": "https://arbitrum-one.public.blastapi.io", "timeout_secs": 20 },
+  { "url": "https://arb-one-mainnet.gateway.tatum.io", "timeout_secs": 20 },
+  { "url": "https://arb-rpc.keccak.io", "timeout_secs": 20 },
+  { "url": "https://arbitrum-one-public.nodies.app", "timeout_secs": 20 },
+  { "url": "https://public-arb-mainnet.fastnode.io", "timeout_secs": 20 },
+  { "url": "https://arbitrum.gateway.tenderly.co", "timeout_secs": 20 },
+  { "url": "wss://arbitrum-one-rpc.publicnode.com", "timeout_secs": 20 },
+  { "url": "https://arbitrum-one-rpc.publicnode.com", "timeout_secs": 20 },
+  { "url": "https://arbitrum-one.rpc.sentio.xyz", "timeout_secs": 20 }
+  ],
+  "dexes": [
+    { "quoter": "0x61fFE014bA17989E743c5F6cB21bF9697530B21e", "router": "0xe592427a0aece92de3edee1f18e0157c05861564", "name": "UniswapV3" }
+  ]
+}

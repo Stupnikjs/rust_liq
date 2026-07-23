@@ -11,7 +11,6 @@ struct ServerConsumer {
 
 pub fn build_router(cache: Arc<MarketCache>, store: Arc<BacktestStore>) -> Router {
     let consumer = ServerConsumer { cache, store };
-
     Router::new()
         .route("/logs", get(all_logs))
         .route("/logs/{pair}", get(one_log))

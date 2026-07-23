@@ -31,7 +31,32 @@ pub struct RpcEndpoint {
 }
 
 
+/*
 
+
+┌─────────────────────────────────────────────────────────────┐
+│                        RpcPool                              │
+└─────────────────────────────────────────────────────────────┘
+
+• Gère un ensemble d'endpoints RPC.
+
+• acquire() et acquire_top_tier()
+  → sélectionnent un endpoint disponible
+  → attendent au maximum 2 secondes avant d'abandonner.
+
+• try_reserve()
+  → réserve atomiquement un endpoint disponible ;
+  → retourne true si la réservation a réussi.
+
+• Gestion des échecs
+  → chaque failure augmente un backoff exponentiel
+    (jusqu'à 60 s) avant que l'endpoint puisse être réutilisé.
+
+L'objectif est de répartir les appels RPC, d'éviter les endpoints
+défaillants et de limiter les requêtes simultanées vers un même nœud.
+
+
+*/
 
 
 impl RpcEndpoint {
@@ -110,7 +135,6 @@ impl  RpcPool {
     }
 
 
-    /// Pour les appels critiques (tx, receipt) : jamais les garbage endpoints.
     pub async fn acquire_top_tier(&self) -> anyhow::Result<&Arc<RpcEndpoint>> {
         tokio::time::timeout(
         Duration::from_secs(2),

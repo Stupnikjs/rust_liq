@@ -14,20 +14,43 @@ use rpc::{RpcPool, RpcEndpoint};
 use tokio::sync::Semaphore;
 use tokio::time::{interval, Duration};
 
-
 mod tx_sender;
 pub mod rpc;
 
+
+/*
+
+
+Architecture :
+
+- RpcPool gère les endpoints RPC.
+  - sélection des endpoints disponibles ;
+  - suivi des succès/échecs ;
+  - backoff exponentiel après les failures (jusqu'à 60 s).
+
+- TxSender gère :
+  - la synchronisation et l'incrémentation du nonce ;
+  - l'envoi des transactions (toujours via un endpoint top-tier).
+
+- Connector :
+  - fournit les appels eth_call en choisissant un endpoint adapté ;
+  - gère la souscription WebSocket aux événements ;
+  - délègue l'envoi des transactions à TxSender.
+
+- Les Arc permettent le partage des ressources entre les tâches Tokio.
+
+
+
+*/
 
 pub struct Connector {
     pub pool: RpcPool,
     pub ws: Arc<RootProvider<Ethereum>>,
     pub tx_sender: Arc<TxSender>,
 }
-// address!("78D3FEc647f35E5D413597D217C5E0D9605acE3E")
+
 impl Connector {
  
-
     pub async fn subscribe<F>(&self, morpho_addr: Address, events_sig: &[&str],  mut on_log: F) -> Result<(), BoxError>
     where
         F: FnMut(Log),
@@ -143,4 +166,3 @@ impl CallRaw for Connector {
 }
 
 
-// keep track of err in RPC 

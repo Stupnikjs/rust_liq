@@ -4,7 +4,7 @@ use std::error::Error;
 use std::sync::{Arc};
 use eth_core::utils::BoxError;
 use tokio::sync::RwLock; 
-use crate::config::{Config, json::load_base_config};
+use crate::config::{Config, json::{load_arb_config, load_base_config}};
 use connector::{Connector};
 use crate::cache::{MarketCache, logs::MarketLog, parse::fetch_parse_all_market};
 //use crate::runner::config::load_katana_config;
@@ -42,13 +42,14 @@ pub struct Runner {
 
 impl Runner {
     pub async fn new(chainid: u64) -> Result<Runner, BoxError> {
+        let config_path = format!("./json_config/{chainid}/static.json"); 
         let config = match chainid {
-            8453 => load_base_config("./json_config/8453/static.json")?,
-           // 42161 => load_arb_config(slow_mode)?,
+            8453 => load_base_config(&config_path)?,
+            42161 => load_arb_config(&config_path)?,
            // 747474 => load_katana_config(slow_mode)?,
             _ => panic!("unsupported chain {}", chainid),
         };
-        
+
         
         let config = Arc::new(config);
         let cache = Arc::new(MarketCache::new(&[]));
@@ -60,7 +61,7 @@ impl Runner {
         let log_store = Arc::new(RwLock::new(HashMap::new()));
 
         // Error lauching db 
-        let backtest = Arc::new(BacktestStore::new("worker/data/db").await?);
+        let backtest = Arc::new(BacktestStore::new(&format!("worker/data/{chainid}/db")).await?);
 
         Ok(Self { config, cache, connector, route_cache, log_store, backtest })
     }
@@ -128,9 +129,15 @@ impl Runner {
     let log_handle = {
     let cache = Arc::clone(&self.cache);
     let backtest_store = Arc::clone(&self.backtest); 
+    let port = match self.config.chain_id {
+        8453 => 8453,
+        747474 => 7474,
+        42161 => 4215,
+        _ => 0,
+    };
     tokio::spawn(async move {
         let app = build_router(cache, backtest_store);
-        let listener = tokio::net::TcpListener::bind("127.0.0.1:9090")
+        let listener = tokio::net::TcpListener::bind(format!("127.0.0.1:{port}"))
             .await
             .expect("failed to bind API port");
         if let Err(e) = axum::serve(listener, app).await {

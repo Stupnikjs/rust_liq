@@ -16,6 +16,35 @@ use std::collections::BTreeSet;
 use std::sync::Mutex;
 
 
+/*
+
+┌─────────────────────────────────────────────────────────────┐
+│                        TxSender                             │
+└─────────────────────────────────────────────────────────────┘
+
+Responsabilités :
+
+• Synchronise et attribue les nonces de manière thread-safe.
+
+• Réutilise automatiquement les nonces libérés lorsqu'une
+  transaction n'a finalement pas été diffusée.
+
+• Met à jour en continu la base fee via une souscription
+  WebSocket aux nouveaux blocs.
+
+• Construit, signe et diffuse les transactions EIP-1559.
+
+• Attend la receipt (30 s) puis détermine si la transaction est :
+    - minée ;
+    - toujours en attente dans le mempool ;
+    - abandonnée (nonce réutilisable) ;
+    - d'état inconnu (nonce conservé par sécurité).
+
+Le composant garantit qu'un même nonce n'est jamais attribué
+simultanément à plusieurs transactions.
+
+
+ */
 pub struct TxSender {
     signer: PrivateKeySigner,
     next_nonce: AtomicU64,
