@@ -18,7 +18,7 @@ impl Runner  {
         let chain_id = self.config.chain_id;
          tokio::spawn(async move {
             loop {
-                tokio::time::sleep(Duration::from_secs(3600)).await;
+                tokio::time::sleep(Duration::from_secs(sec)).await;
                 cache_api.api_refresh(chain_id).await;
                 
             }
