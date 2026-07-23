@@ -4,7 +4,7 @@ use alloy::primitives::{Address, U256, Bytes};
 use alloy_primitives::address;
 use crate::swap::{PoolEdge, now_ms};
 use connector::Connector;
-use eth_core::encode::{encode_address, encode_uint256,selector}; 
+use eth_core::{encode::{encode_address, encode_uint256,selector}, traits::CallRaw}; 
 use crate::swap::abi::uni::encode_quote_single_exact_input; 
 
 const UNI_FEES: [u32; 4] = [100, 500, 3000, 10000];
@@ -127,7 +127,7 @@ impl UniswapV3 {
 ) -> Option<U256> {
     let calldata = encode_quote_single_exact_input(token_in, token_out, fee, amount_in);
     let from = address!("78D3FEc647f35E5D413597D217C5E0D9605acE3E"); 
-    let resp = connector.call_raw(false, from, self.quoter, calldata).await;
+    let resp = connector.call_raw(1, from, self.quoter, calldata).await;
     match resp {
         Ok(bytes) => {
             if bytes.len() < 32 {

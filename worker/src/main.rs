@@ -12,7 +12,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /*   note 
 
-onchain call positions sur les 6 positions les plus a risque
+thread 'main' (11436) panicked at connector/src/lib.rs:140:109:
+called `Result::unwrap()` on an `Err` value: no rpc available
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+backtest_store: writer arrêté => backtest ligne 91
 
 */
 

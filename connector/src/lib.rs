@@ -26,50 +26,7 @@ pub struct Connector {
 }
 // address!("78D3FEc647f35E5D413597D217C5E0D9605acE3E")
 impl Connector {
-    pub async fn call_raw(&self, top_tier: bool, from: Address, to: Address, data: Bytes) -> Result<Bytes, BoxError> {
-    const MAX_RETRIES: u32 = 3;
-    let tx = TransactionRequest::default().from(from).to(to).input(data.into());
-
-
-    for attempt in 0..MAX_RETRIES {
-        let ep = if top_tier {
-            match self.pool.acquire_top_tier().await {
-                Ok(ep) => ep,
-                Err(_) => match self.pool.acquire().await {
-                    Ok(ep) => ep,
-                    Err(_) => {
-                        tokio::time::sleep(Duration::from_secs(2)).await;
-                        continue;
-                    }
-                },
-            }
-        } else {
-            match self.pool.acquire().await {
-                Ok(ep) => ep,
-                Err(_) => {
-                    tokio::time::sleep(Duration::from_secs(2)).await;
-                    continue;
-                }
-            }
-        };
-
-        match ep.provider.call(tx.clone()).await {
-            Ok(bytes) => {
-                ep.register_success();
-                return Ok(bytes);
-            }
-            Err(err) => {
-                ep.register_failure();
-            }
-        }
-    }
-
-        Err(BoxError::from("max retry reached "))
-    }
-
-    
-
-    
+ 
 
     pub async fn subscribe<F>(&self, morpho_addr: Address, events_sig: &[&str],  mut on_log: F) -> Result<(), Box<dyn std::error::Error>>
     where
@@ -137,21 +94,46 @@ impl CallRaw for Connector {
         to: Address,
         data: Bytes,
     ) -> Result<Bytes, BoxError> {
-        let ep = if tier == 0 {self.pool.acquire_top_tier().await.unwrap()} else {self.pool.acquire().await.unwrap()}; 
-        let tx = TransactionRequest::default().from(from).to(to).input(data.into());
-        match ep.provider.call(tx).await {
-        Ok(bytes) => {
-            ep.register_success();
-            Ok(bytes)
-        }
-        Err(err) => {
-            ep.register_failure();
-            Err(err.into())
+        const MAX_RETRIES: u32 = 3;
+    let tx = TransactionRequest::default().from(from).to(to).input(data.into());
+
+
+    for attempt in 0..MAX_RETRIES {
+        let ep = if tier == 0 {
+            match self.pool.acquire_top_tier().await {
+                Ok(ep) => ep,
+                Err(_) => match self.pool.acquire().await {
+                    Ok(ep) => ep,
+                    Err(_) => {
+                        tokio::time::sleep(Duration::from_secs(2)).await;
+                        continue;
+                    }
+                },
+            }
+        } else {
+            match self.pool.acquire().await {
+                Ok(ep) => ep,
+                Err(_) => {
+                    tokio::time::sleep(Duration::from_secs(2)).await;
+                    continue;
+                }
+            }
+        };
+
+        match ep.provider.call(tx.clone()).await {
+            Ok(bytes) => {
+                ep.register_success();
+                return Ok(bytes);
+            }
+            Err(err) => {
+                ep.register_failure();
+            }
         }
     }
-}
-}
 
+        Err(BoxError::from("max retry reached "))
+}
+}
 
 
 // keep track of err in RPC 

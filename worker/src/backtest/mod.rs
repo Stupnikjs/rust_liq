@@ -87,7 +87,7 @@ impl BacktestStore {
                     }
                 }
             }
-
+            // 
             eprintln!("backtest_store: writer arrêté");
         });
 
