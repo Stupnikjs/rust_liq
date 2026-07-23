@@ -72,11 +72,11 @@ impl MarketCache {
         2
     }
     else if hf < WAD * U256::from(105u64) / U256::from(100u64) && !is_correlated { 
-        100
+        120
     } else if hf < WAD * U256::from(110u64) / U256::from(100u64) && !is_correlated {
         300
     } else if hf < WAD * U256::from(120u64) / U256::from(100u64) && !is_correlated{
-        600
+        900
     } else if hf < WAD * U256::from(150u64) / U256::from(100u64) && !is_correlated {
         7_200
     } else {
