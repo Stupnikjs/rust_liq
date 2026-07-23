@@ -152,13 +152,12 @@ pub async fn oracle_call<C>(conn: &C, tier:u8, oracle_addr: Address)-> Result<U2
 }
 
 
-pub fn decode_oracle_price(data: &[u8])-> Result<U256,anyhow::Error> {
+pub fn decode_oracle_price(data: &[u8]) -> Result<U256, anyhow::Error> {
     if data.len() < 32 {
         return Err(anyhow::anyhow!("response too short"));
     }
-    Ok(U256::from_be_slice(data))
+    Ok(U256::from_be_slice(&data[0..32]))
 }
-
 
 
 

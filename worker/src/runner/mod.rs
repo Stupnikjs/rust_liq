@@ -76,8 +76,12 @@ impl Runner {
 
         // geting oracle prices 
         for market_id in self.cache.ids() {
-            let _ = self.cache.onchain_oracle_refresh(self.connector.as_ref(),1, market_id, ).await;
-            let _ = self.cache.onchain_market_refresh(self.connector.as_ref(), 1, self.config.morpho_addr, market_id).await;
+            if let Err(e) = self.cache.onchain_oracle_refresh(self.connector.as_ref(), 1, market_id).await {
+                eprintln!("oracle_refresh failed for {market_id}: {e}");
+            }
+            if let Err(e) = self.cache.onchain_market_refresh(self.connector.as_ref(), 1, self.config.morpho_addr, market_id).await {
+                eprintln!("market_refresh failed for {market_id}: {e}");
+            }
            let _ =  self.cache.recompute_all_hf(market_id);  
            let _ =  self.cache.sort_by_hf(market_id);
         }
