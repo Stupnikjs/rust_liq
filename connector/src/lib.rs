@@ -28,7 +28,7 @@ pub struct Connector {
 impl Connector {
  
 
-    pub async fn subscribe<F>(&self, morpho_addr: Address, events_sig: &[&str],  mut on_log: F) -> Result<(), Box<dyn std::error::Error>>
+    pub async fn subscribe<F>(&self, morpho_addr: Address, events_sig: &[&str],  mut on_log: F) -> Result<(), BoxError>
     where
         F: FnMut(Log),
     {
@@ -51,7 +51,7 @@ impl Connector {
         Err("ws log subscription stream ended".into())
     }
 
-    pub async fn send_tx(&self, to: Address, data: Bytes) -> Result<TxHash, Box<dyn std::error::Error>> {
+    pub async fn send_tx(&self, to: Address, data: Bytes) -> Result<TxHash, BoxError> {
         self.tx_sender.send_tx(&self.pool.acquire_top_tier().await.unwrap().provider, to, data).await
     }
 }
@@ -61,7 +61,7 @@ pub async fn build(
     ws_url: &str,
     signer: PrivateKeySigner,
     chain_id: u64,
-) -> Result<Connector, Box<dyn std::error::Error>> {
+) -> Result<Connector, BoxError> {
     let ws = Arc::new(
         ProviderBuilder::new()
             .disable_recommended_fillers()
@@ -72,8 +72,9 @@ pub async fn build(
     let pool = RpcPool::new(rpc_configs);
 
     // le tx_sender s'appuie sur un endpoint top-tier dès l'init
-    let init_ep = pool.acquire_top_tier().await;
-    let tx_sender = Arc::new(TxSender::init(&init_ep.unwrap().provider, signer, chain_id).await?);
+    let init_ep = pool.acquire_top_tier().await?;
+
+    let tx_sender = Arc::new(TxSender::init(&init_ep.provider, signer, chain_id).await?);
     tx_sender.spawn_base_fee_updater(Arc::clone(&ws));
 
     Ok(Connector { pool, ws, tx_sender })
@@ -101,13 +102,18 @@ impl CallRaw for Connector {
     for attempt in 0..MAX_RETRIES {
         let ep = if tier == 0 {
             match self.pool.acquire_top_tier().await {
-                Ok(ep) => ep,
-                Err(_) => match self.pool.acquire().await {
+                Ok(ep) => {
+                    ep
+                },
+                Err(_) => {
+ 
+                    match self.pool.acquire().await {
                     Ok(ep) => ep,
                     Err(_) => {
                         tokio::time::sleep(Duration::from_secs(2)).await;
                         continue;
                     }
+                }
                 },
             }
         } else {
@@ -120,6 +126,7 @@ impl CallRaw for Connector {
             }
         };
 
+        
         match ep.provider.call(tx.clone()).await {
             Ok(bytes) => {
                 ep.register_success();

@@ -2,8 +2,9 @@
 use std::collections::HashMap;
 use std::error::Error;
 use std::sync::{Arc};
+use eth_core::utils::BoxError;
 use tokio::sync::RwLock; 
-use crate::config::{Config, load_base_config};
+use crate::config::{Config, json::load_base_config};
 use connector::{Connector};
 use crate::cache::{MarketCache, logs::MarketLog, parse::fetch_parse_all_market};
 //use crate::runner::config::load_katana_config;
@@ -40,14 +41,15 @@ pub struct Runner {
 }
 
 impl Runner {
-    pub async fn new(chainid: u64) -> Result<Runner, Box<dyn Error>> {
+    pub async fn new(chainid: u64) -> Result<Runner, BoxError> {
         let config = match chainid {
-            8453 => load_base_config()?,
+            8453 => load_base_config("./json_config/8453/static.json")?,
            // 42161 => load_arb_config(slow_mode)?,
            // 747474 => load_katana_config(slow_mode)?,
             _ => panic!("unsupported chain {}", chainid),
         };
-
+        
+        
         let config = Arc::new(config);
         let cache = Arc::new(MarketCache::new(&[]));
         let rpc_configs = config.rpc_configs.clone(); 

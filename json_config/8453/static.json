@@ -1,0 +1,32 @@
+{
+  "chain_id":8453,
+  "morpho_addr": "0xBBBBBbbBBb9cC5e90e3b3Af64bdAF62C37EEFFCb",
+  "liquidator_addr": "0x1BB6b60C72bBc80D77f34919C724D2255D24A874",
+  "premium_rpc_env_vars": ["DRPC_BASE_HTTP", "CHAINSTACK_BASE_HTTP"],
+  "premium_timeout_ms": 200,
+  "public_rpcs": [
+    { "url": "https://rpc.baseazul.dev", "timeout_secs": 20 },
+    { "url": "https://base-rpc.publicnode.com", "timeout_secs": 20 },
+    { "url": "https://base-mainnet.gateway.tatum.io", "timeout_secs": 20 },
+    { "url": "https://base.drpc.org", "timeout_secs": 20 },
+    { "url": "https://rpc.nodeflare.app/base/public", "timeout_secs": 20 },
+    { "url": "https://base.public.blockpi.network/v1/rpc/public", "timeout_secs": 20 },
+    { "url": "https://base.lava.build", "timeout_secs": 20 },
+    { "url": "https://base-rpc.keccak.io", "timeout_secs": 20 },
+    { "url": "https://api.zan.top/base-mainnet", "timeout_secs": 20 },
+    { "url": "https://gateway.tenderly.co/public/base", "timeout_secs": 20 },
+    { "url": "https://base.gateway.tenderly.co", "timeout_secs": 20 },
+    { "url": "https://base-mainnet.public.blastapi.io", "timeout_secs": 20 },
+    { "url": "https://base.rpc.blxrbdn.com", "timeout_secs": 20 },
+    { "url": "https://base-public.nodies.app", "timeout_secs": 20 },
+    { "url": "https://base.meowrpc.com", "timeout_secs": 20 },
+    { "url": "https://mainnet.base.org", "timeout_secs": 20 },
+    { "url": "https://developer-access-mainnet.base.org", "timeout_secs": 20 },
+    { "url": "https://base.rpc.sentio.xyz", "timeout_secs": 20 },
+    { "url": "https://base.api.pocket.network", "timeout_secs": 20 },
+    { "url": "https://1rpc.io/base", "timeout_secs": 20 }
+  ],
+  "dexes": [
+    { "quoter": "0x3d4e44Eb1374240CE5F1B871ab261CD16335B76a", "router": "0x2626664c2603336E57B271c5C0b26F421741e481", "name": "UniswapV3" }
+  ]
+}

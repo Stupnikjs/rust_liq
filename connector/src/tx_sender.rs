@@ -10,6 +10,7 @@ use alloy::primitives::{Address, Bytes, TxHash, U256};
 use alloy::providers::Provider;
 use alloy::rpc::types::{BlockNumberOrTag, TransactionRequest};
 use alloy::signers::local::PrivateKeySigner;
+use eth_core::utils::BoxError;
 use futures::StreamExt;
 use std::collections::BTreeSet;
 use std::sync::Mutex;
@@ -28,7 +29,7 @@ impl TxSender {
         http: &P,
         signer: PrivateKeySigner,
         chain_id: u64,
-    ) -> Result<Self, Box<dyn std::error::Error>> {
+    ) -> Result<Self, BoxError> {
         let nonce = http
             .get_transaction_count(signer.address())
             .pending()
@@ -87,7 +88,7 @@ impl TxSender {
         http: &P,
         to: Address,
         data: Bytes,
-    ) -> Result<TxHash, Box<dyn std::error::Error>> {
+    ) -> Result<TxHash, BoxError> {
         
         let from = self.address();
         let nonce = self.next_nonce();

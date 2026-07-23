@@ -35,32 +35,32 @@ pub struct RpcEndpoint {
 
 
 impl RpcEndpoint {
-    pub fn new(url: String, tier: Tier, min_interval: Duration) -> anyhow::Result<Self> {
-        Ok(Self {
-            provider: RootProvider::<Ethereum>::new_http(url.parse()?),
-            url,
-            tier,
-            min_interval,
-            next_ok_at: Mutex::new(Instant::now()),
-            consecutive_failures: AtomicU64::new(0),
-        })
-    }
+        pub fn new(url: String, tier: Tier, min_interval: Duration) -> anyhow::Result<Self> {
+            Ok(Self {
+                provider: RootProvider::<Ethereum>::new_http(url.parse()?),
+                url,
+                tier,
+                min_interval,
+                next_ok_at: Mutex::new(Instant::now()),
+                consecutive_failures: AtomicU64::new(0),
+            })
+        }
 
     /// true si le cooldown est passé — et le réserve immédiatement pour éviter une race.
-    fn try_reserve(&self) -> bool {
-        let mut slot = self.next_ok_at.lock().unwrap();
-        let now = Instant::now();
-        if now >= *slot {
-            *slot = now + self.min_interval;
-            true
-        } else {
-            false
+        fn try_reserve(&self) -> bool {
+            let mut slot = self.next_ok_at.lock().unwrap();
+            let now = Instant::now();
+            if now >= *slot {
+                *slot = now + self.min_interval;
+                true
+            } else {
+                false
+            }
         }
-    }
 
-    pub fn register_success(&self) {
-        self.consecutive_failures.store(0, Ordering::Relaxed);
-    }
+        pub fn register_success(&self) {
+            self.consecutive_failures.store(0, Ordering::Relaxed);
+        }
 
         pub fn register_failure(&self) {
         let failures = self.consecutive_failures.fetch_add(1, Ordering::Relaxed) + 1;
@@ -95,9 +95,9 @@ impl  RpcPool {
             loop {
                 if let Some(ep) = self.endpoints
                     .iter()
-
                     .find(|e| e.try_reserve())
                 {
+
                     return ep;
                 }
 
