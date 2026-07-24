@@ -1,3 +1,9 @@
+
+mod api; 
+mod market;
+mod server;
+mod quote;
+
 #[warn(unreachable_code)]
 use std::collections::HashMap;
 use std::error::Error;
@@ -14,11 +20,6 @@ use crate::backtest::{BacktestStore, BacktestSnapshot};
 use crate::runner::{server::build_router}; 
 use crate::swap::routes::RouteCache;
 
-
-mod api; 
-mod market;
-mod server;
-mod quote;
 
 
 pub const EVENTS_SIG: [&str; 7] = [

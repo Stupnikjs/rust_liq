@@ -20,7 +20,10 @@ impl Runner  {
             loop {
                 tokio::time::sleep(Duration::from_secs(sec)).await;
                 cache_api.api_refresh(chain_id).await;
-                
+                for id in cache_api.ids() {
+                   let _ =  cache_api.recompute_all_hf(id);
+                   let _ =  cache_api.sort_by_hf(id);  
+                }
             }
         });
     }

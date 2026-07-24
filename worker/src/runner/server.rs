@@ -1,5 +1,6 @@
+use alloy_primitives::FixedBytes;
 use axum::{extract::{State, Path}, routing::get, Json, Router};
-use std::sync::Arc;
+use std::{str::FromStr, sync::Arc};
 use crate::{backtest::{BacktestSnapshot, BacktestStore}, cache::MarketCache};
 use crate::cache::logs::{snap_to_market_log, id_to_market_log, MarketLog};
 
@@ -13,8 +14,8 @@ pub fn build_router(cache: Arc<MarketCache>, store: Arc<BacktestStore>) -> Route
     let consumer = ServerConsumer { cache, store };
     Router::new()
         .route("/logs", get(all_logs))
-        .route("/logs/{pair}", get(one_log))
-        .route("/snap/{id}", get(snap_by_market_id))
+    //  .route("/logs/{id}", get(one_log))
+    //  .route("/snap/{id}", get(snap_by_market_id))
         .with_state(consumer)
 }
 
@@ -28,18 +29,25 @@ async fn all_logs(State(consumer): State<ServerConsumer>) -> Json<Vec<MarketLog>
     Json(logs)
 }
 
+
+/*
 async fn one_log(
     State(consumer): State<ServerConsumer>,
-    Path(pair): Path<String>,
+    Path(id): Path<String>,
 ) -> Result<Json<MarketLog>, axum::http::StatusCode> {
+    let fixed_id = FixedBytes::<32>::from_str(&id)
+        .map_err(|_| axum::http::StatusCode::BAD_REQUEST)?;
     consumer.cache
         .all_snapshots()
         .values()
-        .find(|s| s.params.get_pair() == pair)
+        .find(|s| s.params.id.eq(&fixed_id))
         .map(snap_to_market_log)
         .map(Json)
         .ok_or(axum::http::StatusCode::NOT_FOUND)
 }
+
+
+
 
 async fn snap_by_market_id(
     State(consumer): State<ServerConsumer>,
@@ -59,3 +67,5 @@ async fn snap_by_market_id(
 
     Ok(Json(snapshots))
 }
+
+    */
