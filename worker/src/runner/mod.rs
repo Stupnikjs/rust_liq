@@ -133,7 +133,8 @@ impl Runner {
         // nouveau: serveur axum, même niveau que les autres
     let log_handle = {
     let cache = Arc::clone(&self.cache);
-    let backtest_store = Arc::clone(&self.backtest); 
+    let backtest_store = Arc::clone(&self.backtest);
+    let conn = Arc::clone(&self.connector);  
     let port = match self.config.chain_id {
         8453 => 8453,
         747474 => 7474,
@@ -141,7 +142,7 @@ impl Runner {
         _ => 0,
     };
     tokio::spawn(async move {
-        let app = build_router(cache, backtest_store);
+        let app = build_router(cache, backtest_store, conn );
         let listener = tokio::net::TcpListener::bind(format!("127.0.0.1:{port}"))
             .await
             .expect("failed to bind API port");

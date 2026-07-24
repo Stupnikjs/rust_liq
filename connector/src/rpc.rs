@@ -33,6 +33,15 @@ pub struct RpcEndpoint {
 }
 
 
+#[derive(Debug, serde::Serialize)]
+pub struct RpcInfo {
+    pub url: String,
+    pub tier: String,
+    pub failures: u64,
+    pub success_rate_60m: f64,
+    pub  cooldown_ms:u64,
+}
+
 /*
 
 
@@ -78,7 +87,7 @@ impl RpcEndpoint {
             })
         }
 
-    /// true si le cooldown est passé — et le réserve immédiatement pour éviter une race.
+    
         fn try_reserve(&self) -> bool {
             loop{
                 let now = current_millis();
@@ -144,6 +153,13 @@ impl RpcEndpoint {
         }
         total_successes as f64 / total_attempts as f64
     }
+
+        pub fn cooldown_ms(&self) -> u64 {
+        let now = current_millis();
+        let next = self.next_ok_at.load(Ordering::Acquire);
+
+        next.saturating_sub(now)
+    }
     
 }
 
@@ -194,6 +210,23 @@ impl  RpcPool {
     }
 
 
+    
+    pub fn info(&self) -> Vec<RpcInfo> {
+    self.endpoints
+        .iter()
+        .map(|ep| RpcInfo {
+            url: ep.url.clone(),
+            tier: match ep.tier {
+                Tier::Top => "Top",
+                Tier::Garbage => "Garbage",
+            }
+            .to_string(),
+            failures: ep.failures(),
+            success_rate_60m: ep.success_rate(60),
+            cooldown_ms: ep.cooldown_ms(),
+        })
+        .collect()
+}
 
 }
 

@@ -1,6 +1,8 @@
 use alloy_primitives::FixedBytes;
 use axum::{extract::{State, Path}, routing::get, Json, Router};
 use std::{str::FromStr, sync::Arc};
+use connector::rpc::RpcPool; 
+use connector::Connector; 
 use crate::{backtest::{BacktestSnapshot, BacktestStore}, cache::MarketCache};
 use crate::cache::logs::{snap_to_market_log, id_to_market_log, MarketLog};
 
@@ -8,10 +10,11 @@ use crate::cache::logs::{snap_to_market_log, id_to_market_log, MarketLog};
 struct ServerConsumer {
     cache: Arc<MarketCache>,
     store: Arc<BacktestStore>,
+    connector: Arc<Connector>,
 }
 
-pub fn build_router(cache: Arc<MarketCache>, store: Arc<BacktestStore>) -> Router {
-    let consumer = ServerConsumer { cache, store };
+pub fn build_router(cache: Arc<MarketCache>, store: Arc<BacktestStore>, conn:Arc<connector::Connector>) -> Router {
+    let consumer = ServerConsumer { cache, store, connector:conn};
     Router::new()
         .route("/logs", get(all_logs))
     //  .route("/logs/{id}", get(one_log))
@@ -28,6 +31,10 @@ async fn all_logs(State(consumer): State<ServerConsumer>) -> Json<Vec<MarketLog>
 
     Json(logs)
 }
+
+
+
+// async fn pool()
 
 
 /*
