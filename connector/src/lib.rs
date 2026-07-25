@@ -75,6 +75,14 @@ impl Connector {
     }
 
     pub async fn send_tx(&self, to: Address, data: Bytes) -> Result<TxHash, BoxError> {
+        let ep = match self.pool.acquire_top_tier().await {
+                Ok(ep) => {
+                    ep
+                },
+                Err(_) => {
+                   self.pool.acquire().await.expect("failed aquire_top tier then aquire garbage tier in send tx ")
+                },
+            }; 
         self.tx_sender.send_tx(&self.pool.acquire_top_tier().await.unwrap().provider, to, data).await
     }
 }
