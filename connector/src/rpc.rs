@@ -248,3 +248,30 @@ fn current_millis() -> u64 {
         .elapsed()
         .as_millis() as u64
 }
+
+
+// add rr_counter
+pub async fn acquire_top_tier(&self) -> anyhow::Result<&Arc<RpcEndpoint>> {
+        let top: Vec<&Arc<RpcEndpoint>> = self.endpoints.iter()
+            .filter(|e| e.tier == Tier::Top)
+            .collect();
+
+        if top.is_empty() {
+            return Err(anyhow::anyhow!("no top tier endpoints configured"));
+        }
+
+        tokio::time::timeout(Duration::from_secs(2), async {
+            loop {
+                let start = self.rr_counter.fetch_add(1, Ordering::Relaxed) as usize;
+                for i in 0..top.len() {
+                    let ep = top[(start + i) % top.len()];
+                    if ep.try_reserve() {
+                        return ep;
+                    }
+                }
+                tokio::time::sleep(Duration::from_millis(20)).await;
+            }
+        })
+        .await
+        .map_err(|_| anyhow::anyhow!("no top tier rpc available"))
+    }
