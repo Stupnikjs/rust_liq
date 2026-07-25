@@ -165,6 +165,7 @@ impl RpcEndpoint {
 
 pub struct RpcPool {
     endpoints: Vec<Arc<RpcEndpoint>>,
+    rr_counter: AtomicU64,
 }
 
 impl  RpcPool {
