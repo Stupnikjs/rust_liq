@@ -37,7 +37,7 @@ pub async fn liquidate(
     let from = address!("78D3FEc647f35E5D413597D217C5E0D9605acE3E"); 
     match conn.call_raw(0, from, liquidator_addr, calldata.clone()).await {
     Ok(_) => {
-        // simulation OK, on peut envoyer
+        println!("simulation OK, on peut envoyer sur {} {}", mparam.get_pair(), pos.address.to_string()); 
     }
     Err(e) => {
         eprintln!("simulation failed for {:?}: {}", pos.market_id, e);

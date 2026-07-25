@@ -156,12 +156,13 @@ impl CallRaw for Connector {
                 return Ok(bytes);
             }
             Err(err) => {
+                eprintln!("[attempt {attempt}] call_raw failed on {}: {:?}", ep.url, err);
                 ep.register_failure();
             }
         }
     }
-
-        Err(BoxError::from("max retry reached "))
+    
+    Err(BoxError::from("max retry reached "))
 }
 }
 

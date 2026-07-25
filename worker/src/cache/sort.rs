@@ -7,8 +7,14 @@ use eth_core::utils::BoxError;
 impl MarketCache {
     
     pub fn recompute_all_hf(&self, id: FixedBytes<32>) -> Result<(), BoxError>{
-        let snap = self.snapshot(id).expect("snap not found");
-        let mparam = self.get_market_param_by_id(id).expect("market param not found");
+        let Some(snap) = self.snapshot(id) else {
+            println!("snapshot failed for {}", id.to_string()); 
+            return Ok(()); // ou log + return, pas de panic
+        };
+        let Some(mparam) = self.get_market_param_by_id(id) else {
+            println!("get market params failed for {}", id.to_string());
+            return Ok(());
+        };
 
         let updated: Vec<BorrowPosition> = snap
             .positions

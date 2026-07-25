@@ -41,9 +41,12 @@ impl MarketLoopConsumer {
                 tier = 1;
             }
 
+            
             if let Err(err) = self.refresh(count, index, tier).await {
                 eprintln!("[{:?}] refresh failed: {err:?}", self.id);
             }
+
+
 
             let Some((snap, mparam)) = self.snapshot() else {
                 tokio::time::sleep(Duration::from_secs(3600)).await;
@@ -59,12 +62,16 @@ impl MarketLoopConsumer {
             let (lowest, interval) = self.cache.lowest_hf_and_interval(self.id, is_correlated);
             last_interval = interval;
 
+
+            // liquidation 
             if let (Some(pos), 0) = (lowest, interval) {
                 if let Err(err) = self.try_liquidate(pos, mparam).await {
                     eprintln!("[{:?}] liquidation attempt failed: {err:?}", self.id);
                 }
             }
 
+
+            // batching 
             if let Err(err) = self.batching(&snap, &mut batch).await {
                 eprintln!("[{:?}] batching failed: {err:?}", self.id);
             }
