@@ -2,7 +2,7 @@
   "chain_id": 747474,
   "morpho_addr": "0x6c247b1F6182318877311737BaC0844bAa518F5e",
   "liquidator_addr": "0x2661C239C38AaB0d333Be91F999F7E69dD706504",
-  "premium_rpc_env_vars": ["DRPC_KATANA_HTTP", "ANKR_KATANA_HTTP"],
+  "premium_rpc_env_vars": ["DRPC_KATANA_HTTP"],
   "premium_timeout_ms": 200,
   "public_rpcs": [
     { "url": "https://rpc.katana.network", "timeout_secs": 20 },
