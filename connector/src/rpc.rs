@@ -42,6 +42,22 @@ pub struct RpcInfo {
     pub  cooldown_ms:u64,
 }
 
+
+
+pub struct  CallStats {
+    rpc_url: String, 
+    latency_ms: u64,
+    call_type: CallType, 
+}
+
+
+enum CallType {
+    MarketCall,
+    OracleCall,
+    LiquidationCall,
+}
+
+
 /*
 
 
@@ -170,7 +186,8 @@ pub struct RpcPool {
 
 impl  RpcPool {
     pub fn new(endpoints: Vec<Arc<RpcEndpoint>>) -> Self {
-        Self { endpoints }
+        let rr_counter = AtomicU64::new(0); 
+        Self { endpoints,  rr_counter}
     }
     
 
@@ -195,8 +212,32 @@ impl  RpcPool {
     .map_err(|_| anyhow::anyhow!("no rpc available"))
     }
 
-
     pub async fn acquire_top_tier(&self) -> anyhow::Result<&Arc<RpcEndpoint>> {
+        let top: Vec<&Arc<RpcEndpoint>> = self.endpoints.iter()
+            .filter(|e| e.tier == Tier::Top)
+            .collect();
+
+        if top.is_empty() {
+            return Err(anyhow::anyhow!("no top tier endpoints configured"));
+        }
+
+        tokio::time::timeout(Duration::from_secs(2), async {
+            loop {
+                let start = self.rr_counter.fetch_add(1, Ordering::Relaxed) as usize;
+                for i in 0..top.len() {
+                    let ep = top[(start + i) % top.len()];
+                    if ep.try_reserve() {
+                        return ep;
+                    }
+                }
+                tokio::time::sleep(Duration::from_millis(20)).await;
+            }
+        })
+        .await
+        .map_err(|_| anyhow::anyhow!("no top tier rpc available"))
+    }
+
+    pub async fn old_acquire_top_tier(&self) -> anyhow::Result<&Arc<RpcEndpoint>> {
         tokio::time::timeout(
         Duration::from_secs(2),
         async {
@@ -251,28 +292,3 @@ fn current_millis() -> u64 {
 }
 
 
-// add rr_counter
-pub async fn acquire_top_tier(&self) -> anyhow::Result<&Arc<RpcEndpoint>> {
-        let top: Vec<&Arc<RpcEndpoint>> = self.endpoints.iter()
-            .filter(|e| e.tier == Tier::Top)
-            .collect();
-
-        if top.is_empty() {
-            return Err(anyhow::anyhow!("no top tier endpoints configured"));
-        }
-
-        tokio::time::timeout(Duration::from_secs(2), async {
-            loop {
-                let start = self.rr_counter.fetch_add(1, Ordering::Relaxed) as usize;
-                for i in 0..top.len() {
-                    let ep = top[(start + i) % top.len()];
-                    if ep.try_reserve() {
-                        return ep;
-                    }
-                }
-                tokio::time::sleep(Duration::from_millis(20)).await;
-            }
-        })
-        .await
-        .map_err(|_| anyhow::anyhow!("no top tier rpc available"))
-    }

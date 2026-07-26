@@ -48,7 +48,8 @@ impl MarketLoopConsumer {
 
         loop {
             tier = next_tier(tier, last_interval);
-
+            // call stat (rpc_url, latency, type (oracle/market/liquidate) )
+            // increment Vec<CallStat> => push in BacktestStore 
             if let Err(err) = self.refresh(count, refresh_every, tier).await {
                 eprintln!("[{:?}] refresh failed: {err:?}", self.id);
             }
@@ -115,7 +116,7 @@ impl MarketLoopConsumer {
 
     async fn refresh(&self, count: u64, refresh_every: u64, tier: u8) -> Result<(), BoxError> {
         self.refresh_oracle_and_hf(tier).await?;
-
+        
         if count % refresh_every == 0 {
             self.market_refresh_and_sort(tier).await?;
         }

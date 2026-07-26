@@ -2,7 +2,7 @@
   "chain_id":8453,
   "morpho_addr": "0xBBBBBbbBBb9cC5e90e3b3Af64bdAF62C37EEFFCb",
   "liquidator_addr": "0x1BB6b60C72bBc80D77f34919C724D2255D24A874",
-  "premium_rpc_env_vars": ["ANKR_BASE_HTTP", "CHAINSTACK_BASE_HTTP", "DRPC_ARB_HTTP"],
+  "premium_rpc_env_vars": ["ANKR_BASE_HTTP", "CHAINSTACK_BASE_HTTP", "DRPC_BASE_HTTP"],
   "premium_timeout_ms": 200,
   "public_rpcs": [
     { "url": "https://rpc.baseazul.dev", "timeout_secs": 20 },
