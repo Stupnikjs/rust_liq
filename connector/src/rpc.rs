@@ -236,7 +236,31 @@ impl  RpcPool {
         .await
         .map_err(|_| anyhow::anyhow!("no top tier rpc available"))
     }
+    
+    
+pub async fn acquire_lowest_latency_top_tier(&self) -> anyhow::Result<&Arc<RpcEndpoint>> {
+    let mut top: Vec<&Arc<RpcEndpoint>> = self.endpoints.iter()
+        .filter(|e| e.tier == Tier::Top)
+        .collect();
 
+    if top.is_empty() {
+        return Err(anyhow::anyhow!("no top tier endpoints configured"));
+    }
+
+    tokio::time::timeout(Duration::from_secs(2), async {
+        loop {
+            // endpoints jamais mesurés (None) en dernier : priorité aux latences connues
+            top.sort_by_key(|e| e.latency_ms().unwrap_or(u64::MAX));
+
+            if let Some(ep) = top.iter().find(|e| e.try_reserve()) {
+                return *ep;
+            }
+            tokio::time::sleep(Duration::from_millis(20)).await;
+        }
+    })
+    .await
+    .map_err(|_| anyhow::anyhow!("no top tier rpc available"))
+}
     pub async fn old_acquire_top_tier(&self) -> anyhow::Result<&Arc<RpcEndpoint>> {
         tokio::time::timeout(
         Duration::from_secs(2),
