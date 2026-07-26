@@ -157,10 +157,12 @@ impl CallRaw for Connector {
             }
         };
 
+        let started = Instant::now();
         
         match ep.provider.call(tx.clone()).await {
             Ok(bytes) => {
-                ep.register_success();
+                let latency_ms = started.elapsed().as_millis() as u64
+                ep.register_success(latency_ms);
                 return Ok(bytes);
             }
             Err(err) => {
