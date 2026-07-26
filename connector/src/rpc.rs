@@ -45,13 +45,12 @@ pub struct RpcInfo {
 
 
 pub struct  CallStats {
-    rpc_url: String, 
-    latency_ms: u64,
-    call_type: CallType, 
+    pub latency_ms: u64,
+    pub call_type: CallType, 
 }
 
-
-enum CallType {
+#[derive(Debug, Clone)]
+pub enum CallType {
     MarketCall,
     OracleCall,
     LiquidationCall,

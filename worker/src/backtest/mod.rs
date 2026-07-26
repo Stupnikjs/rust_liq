@@ -1,9 +1,22 @@
+use connector::rpc::CallStats;
 use eth_core::utils::BoxError;
 use rusqlite::{params, Connection};
 use serde::Serialize;
 use tokio::sync::mpsc;
 
 use crate::{cache::MarketSnapshot, swap::now_ms};
+
+#[derive(Debug, Clone, Serialize)]
+pub struct SnapshotGroup {
+    pub snapshot: BacktestSnapshot,
+    pub calls: Vec<CallStatsRecord>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct CallStatsRecord {
+    pub call_type: String,
+    pub latency_ms: u64,
+}
 
 #[derive(Debug, Clone, Serialize)]
 pub struct BacktestSnapshot {
@@ -20,16 +33,17 @@ pub struct BacktestSnapshot {
     pub total_borrow_shares: String,
 }
 
+#[derive(Debug, Clone, Serialize)]
+pub struct WriteBatch {
+    pub groups: Vec<SnapshotGroup>,
+}
+
 pub struct BacktestStore {
-    tx: mpsc::Sender<Vec<BacktestSnapshot>>,
+    tx: mpsc::Sender<WriteBatch>,
     db_path: String,
 }
 
 impl BacktestStore {
-
-    // creation de la table 
-    // loop sur le receiver du channel rx et expose tx pour push 
-    // retourne la connection sql 
     pub async fn new(db_path: &str) -> anyhow::Result<Self> {
         let db_path = db_path.to_string();
         let db_path_for_conn = db_path.clone();
@@ -39,6 +53,7 @@ impl BacktestStore {
             conn.execute_batch(
                 "PRAGMA journal_mode=WAL;
                     CREATE TABLE IF NOT EXISTS backtest_snapshots (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
                     ts INTEGER NOT NULL,
                     market_id TEXT NOT NULL,
                     oracle_price TEXT NOT NULL,
@@ -50,14 +65,21 @@ impl BacktestStore {
                     borrow_shares TEXT NOT NULL,
                     total_borrow_assets TEXT NOT NULL,
                     total_borrow_shares TEXT NOT NULL,
-                    PRIMARY KEY (market_id, borrower, ts)
+                    UNIQUE (market_id, borrower, ts)
                 );
-                CREATE INDEX IF NOT EXISTS idx_backtest_ts ON backtest_snapshots(ts);"
+                CREATE INDEX IF NOT EXISTS idx_backtest_ts ON backtest_snapshots(ts);
+
+                CREATE TABLE IF NOT EXISTS call_stats (
+                    snapshot_id INTEGER NOT NULL REFERENCES backtest_snapshots(id),
+                    call_type TEXT NOT NULL,
+                    latency_ms INTEGER NOT NULL
+                );
+                CREATE INDEX IF NOT EXISTS idx_call_stats_snapshot ON call_stats(snapshot_id);"
             )?;
             Ok(conn)
         }).await??;
 
-        let (tx, mut rx) = mpsc::channel::<Vec<BacktestSnapshot>>(32);
+        let (tx, mut rx) = mpsc::channel::<WriteBatch>(32);
 
         tokio::spawn(async move {
             let mut conn = Some(conn);
@@ -72,51 +94,63 @@ impl BacktestStore {
                 };
 
                 let res = tokio::task::spawn_blocking(move || {
-                    Self::write_batch(c, batch) 
+                    Self::write_batch(c, batch)
                 }).await;
 
                 match res {
                     Ok(Ok(c)) => conn = Some(c),
                     Ok(Err(e)) => {
                         eprintln!("backtest_store: échec écriture batch: {e}");
-                        break; // <- conn reste None -> évite le E0382 à l'itération suivante
+                        break;
                     }
                     Err(e) => {
                         eprintln!("backtest_store: task jointure échouée: {e}");
-                        break; // <- idem
+                        break;
                     }
                 }
             }
-            // 
             eprintln!("backtest_store: writer arrêté");
         });
 
-        Ok(Self { tx, db_path:db_path_for_conn })
+        Ok(Self { tx, db_path: db_path_for_conn })
     }
 
-    pub async fn push_snapshot(&self, batch: &Vec<BacktestSnapshot>) -> Result<(), BoxError> {
-        let _ = self.tx.send(batch.to_vec()).await
-            .map_err(|_| anyhow::anyhow!("backtest writer task fermée")); 
-            Ok(())
+    pub async fn push_snapshot(&self, batch: WriteBatch) -> Result<(), BoxError> {
+        self.tx.send(batch).await
+            .map_err(|_| anyhow::anyhow!("backtest writer task fermée"))?;
+        Ok(())
     }
 
-    fn write_batch(conn: Connection, batch: Vec<BacktestSnapshot>) -> anyhow::Result<Connection> {
+    fn write_batch(conn: Connection, batch: WriteBatch) -> anyhow::Result<Connection> {
         let tx = conn.unchecked_transaction()?;
         {
-            let mut stmt = tx.prepare_cached(
+            let mut snap_stmt = tx.prepare_cached(
                 "INSERT OR REPLACE INTO backtest_snapshots
                 (ts, market_id, oracle_price, lltv, loan_token_decimals, collateral_token_decimals,
                  borrower, collateral_assets, borrow_shares, total_borrow_assets, total_borrow_shares)
                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)"
             )?;
-            for snap in &batch {
-                stmt.execute(params![
-                    snap.ts as i64, snap.market_id, snap.oracle_price, snap.lltv,
-                    snap.loan_token_decimals, snap.collateral_token_decimals, snap.borrower,
-                    snap.collateral_assets, snap.borrow_shares, snap.total_borrow_assets,
-                    snap.total_borrow_shares,
-                ])?;
-            }
+            let mut call_stmt = tx.prepare_cached(
+                "INSERT INTO call_stats (snapshot_id, call_type, latency_ms) VALUES (?1, ?2, ?3)"
+            )?;
+
+            for group in &batch.groups {
+                let snap = group.snapshot.clone();  
+                snap_stmt.execute(params![
+                        snap.ts as i64, snap.market_id, snap.oracle_price, snap.lltv,
+                        snap.loan_token_decimals, snap.collateral_token_decimals, snap.borrower,
+                        snap.collateral_assets, snap.borrow_shares, snap.total_borrow_assets,
+                        snap.total_borrow_shares,
+                    ])?;
+                    
+                 
+
+                let sid = tx.last_insert_rowid();
+
+                for call in &group.calls {
+                    call_stmt.execute(params![sid, call.call_type, call.latency_ms])?;
+                }
+                }
         }
         tx.commit()?;
         Ok(conn)
@@ -167,15 +201,17 @@ impl BacktestStore {
     }
 }
 
+pub fn build_groups(snap: &MarketSnapshot, calls_stats: Vec<CallStats>) -> Vec<SnapshotGroup> {
+    let ts = now_ms();
 
+    let calls: Vec<CallStatsRecord> = calls_stats.into_iter().map(|c| CallStatsRecord {
+        call_type: format!("{:?}", c.call_type),
+        latency_ms: c.latency_ms,
+    }).collect();
 
-
-pub fn snap_to_4_batch(snap: &MarketSnapshot) -> Vec<BacktestSnapshot> {
-    let lowest_hf = snap.positions.iter().take(4); 
-    let mut snaps = Vec::with_capacity(4); 
-    for p in lowest_hf {
-        let backtest_snap = BacktestSnapshot{
-            ts: now_ms(),
+    snap.positions.iter().take(4).map(|p| {
+        let snapshot = BacktestSnapshot {
+            ts,
             market_id: p.market_id.to_string(),
             oracle_price: snap.stats.oracle_price.to_string(),
             lltv: snap.params.lltv.to_string(),
@@ -186,10 +222,7 @@ pub fn snap_to_4_batch(snap: &MarketSnapshot) -> Vec<BacktestSnapshot> {
             total_borrow_assets: snap.stats.total_borrow_assets.to_string(),
             total_borrow_shares: snap.stats.total_borrow_shares.to_string(),
             borrower: p.address.to_string(),
-        }; 
-        snaps.push(backtest_snap);
-
-    }
-
-    snaps
+        };
+        SnapshotGroup { snapshot, calls: calls.clone() }
+    }).collect()
 }
