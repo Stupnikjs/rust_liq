@@ -30,6 +30,7 @@ pub struct RpcEndpoint {
     next_ok_at: AtomicU64,
     pub consecutive_failures:AtomicU64, 
     buckets: [Bucket; NUM_BUCKETS],
+    // needs latency metrics 
 }
 
 
