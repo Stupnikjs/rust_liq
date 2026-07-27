@@ -126,59 +126,39 @@ pub async fn build(
 impl CallRaw for Connector {
     async fn call_raw(
         &self,
-        tier:u8, 
+        tier: u8,
         from: Address,
         to: Address,
         data: Bytes,
     ) -> Result<Bytes, BoxError> {
         const MAX_RETRIES: u32 = 3;
-    let tx = TransactionRequest::default().from(from).to(to).input(data.into());
+        let tx = TransactionRequest::default().from(from).to(to).input(data.into());
 
-
-    for attempt in 0..MAX_RETRIES {
-        let ep = if tier == 0 {
-            match self.pool.acquire_top_tier().await {
-                Ok(ep) => {
-                    ep
-                },
-                Err(_) => {
- 
-                    match self.pool.acquire().await {
-                    Ok(ep) => ep,
-                    Err(_) => {
-                        tokio::time::sleep(Duration::from_secs(2)).await;
-                        continue;
-                    }
-                }
-                },
-            }
-        } else {
-            match self.pool.acquire().await {
+        for attempt in 0..MAX_RETRIES {
+            let ep = match self.acquire_for_tier(tier).await {
                 Ok(ep) => ep,
                 Err(_) => {
                     tokio::time::sleep(Duration::from_secs(2)).await;
                     continue;
                 }
-            }
-        };
+            };
 
-        let started = Instant::now();
-        
-        match ep.provider.call(tx.clone()).await {
-            Ok(bytes) => {
-                let latency_ms = started.elapsed().as_millis() as u64
-                ep.register_success(latency_ms);
-                return Ok(bytes);
-            }
-            Err(err) => {
-                eprintln!("[attempt {attempt}] call_raw failed on {}: {:?}", ep.url, err);
-                ep.register_failure();
+            let started = Instant::now();
+            match ep.provider.call(tx.clone()).await {
+                Ok(bytes) => {
+                    let latency_ms = started.elapsed().as_millis() as u64;
+                    ep.register_success();
+                    ep.record_latency(latency_ms);
+                    return Ok(bytes);
+                }
+                Err(err) => {
+                    eprintln!("[attempt {attempt}] call_raw failed on {}: {:?}", ep.url, err);
+                    ep.register_failure();
+                }
             }
         }
-    }
-    
-    Err(BoxError::from("max retry reached "))
-}
-}
 
+        Err(BoxError::from("max retry reached"))
+    }
+}
 
