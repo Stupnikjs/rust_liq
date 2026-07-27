@@ -83,6 +83,11 @@ L'objectif est de répartir les appels RPC, d'éviter les endpoints
 défaillants et de limiter les requêtes simultanées vers un même nœud.
 
 
+top_tier_low_latency => liquidation  => tier0
+low_latency => oracle proche liquidation tier1
+public => oracle/market loin de liquidation tier2 
+
+
 */
 
 static START: OnceLock<Instant> = OnceLock::new();
