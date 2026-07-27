@@ -30,7 +30,7 @@ pub struct RpcEndpoint {
     next_ok_at: AtomicU64,
     pub consecutive_failures:AtomicU64, 
     buckets: [Bucket; NUM_BUCKETS],
-    latency_ema:[AtomicU64,4]  
+    latency_ema:AtomicU64,  
 }
 
 
@@ -100,6 +100,7 @@ impl RpcEndpoint {
                 next_ok_at: AtomicU64::new(0),
                 consecutive_failures: AtomicU64::new(0),
                 buckets: std::array::from_fn(|_| Bucket::new()),
+                latency_ema: AtomicU64::new(u64::MAX),
             })
         }
 
@@ -176,6 +177,31 @@ impl RpcEndpoint {
 
         next.saturating_sub(now)
     }
+
+
+    pub fn record_latency(&self, latency_ms: u64) {
+    loop {
+        let current = self.latency_ema.load(Ordering::Acquire);
+        let new_val = if current == u64::MAX {
+            latency_ms
+        } else {
+            let diff = latency_ms as i64 - current as i64;
+            (current as i64 + diff / 8) as u64
+        };
+        if self.latency_ema
+            .compare_exchange_weak(current, new_val, Ordering::AcqRel, Ordering::Acquire)
+            .is_ok()
+        {
+            return;
+        }
+        }
+    }
+    /// None si jamais mesuré.
+    pub fn latency_ms(&self) -> Option<u64> {
+        let v = self.latency_ema.load(Ordering::Acquire);
+        (v != u64::MAX).then_some(v)
+    }
+
     
 }
 
