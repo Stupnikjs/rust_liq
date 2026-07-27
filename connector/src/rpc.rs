@@ -313,6 +313,30 @@ pub async fn acquire_lowest_score(&self) -> anyhow::Result<&Arc<RpcEndpoint>> {
 }
     //pub fn acquire_for_tier(tier:u8)
     
+    pub async fn acquire_public(&self) -> anyhow::Result<&Arc<RpcEndpoint>> {
+        let garbage: Vec<&Arc<RpcEndpoint>> =
+            self.endpoints.iter().filter(|e| e.tier != Tier::Top).collect();
+
+        if garbage.is_empty() {
+            return Err(anyhow::anyhow!("no non-top endpoints configured"));
+        }
+
+        tokio::time::timeout(ACQUIRE_TIMEOUT, async {
+            loop {
+                let start = self.public_rr_counter.fetch_add(1, Ordering::Relaxed) as usize;
+                for i in 0..garbage.len() {
+                    let ep = garbage[(start + i) % garbage.len()];
+                    if ep.try_reserve() {
+                        return ep;
+                    }
+                }
+                tokio::time::sleep(Duration::from_millis(20)).await;
+            }
+        })
+        .await
+        .map_err(|_| anyhow::anyhow!("no public rpc available"))
+    }
+
     pub fn info(&self) -> Vec<RpcInfo> {
     self.endpoints
         .iter()
