@@ -202,15 +202,7 @@ impl RpcEndpoint {
         (v != u64::MAX).then_some(v)
     }
 
-    fn endpoint_score(latency_ms: Option<u64>, success_rate: f64) -> f64 {
-    const UNMEASURED_PENALTY_MS: f64 = 2000.0;
-    const MIN_SUCCESS_RATE: f64 = 0.05;
-
-    let latency = latency_ms.map(|l| l as f64).unwrap_or(UNMEASURED_PENALTY_MS);
-    let success_rate = success_rate.max(MIN_SUCCESS_RATE);
-    latency / success_rate
-}
-
+    
     
 }
 
@@ -313,5 +305,18 @@ fn current_millis() -> u64 {
         .elapsed()
         .as_millis() as u64
 }
+
+
+fn endpoint_score(latency_ms: Option<u64>, success_rate: f64) -> f64 {
+    const UNMEASURED_PENALTY_MS: f64 = 2000.0;
+    const MIN_SUCCESS_RATE: f64 = 0.05;
+
+    let latency = latency_ms.map(|l| l as f64).unwrap_or(UNMEASURED_PENALTY_MS);
+    let success_rate = success_rate.max(MIN_SUCCESS_RATE);
+    latency / success_rate
+}
+
+
+
 
 
