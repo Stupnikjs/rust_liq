@@ -287,16 +287,16 @@ impl RpcPool {
 
         match (tier, step) {
             (0, 0) => self.acquire_top().await,
-            (0, 1) => self.acquire_low().await,
-            (0, _) => self.acquire_public().await,
+            (0, 1) => self.acquire_top().await,
+            (0, _) => self.acquire_low().await,
 
             (1, 0) => self.acquire_low().await,
-            (1, 1) => self.acquire_top().await,
+            (1, 1) => self.acquire_low().await,
             (1, _) => self.acquire_public().await,
 
             (2, 0) => self.acquire_public().await,
-            (2, 1) => self.acquire_low().await,
-            (2, _) => self.acquire_top().await,
+            (2, 1) => self.acquire_public().await,
+            (2, _) => self.acquire_public().await,
 
             _ => Err(anyhow::anyhow!("wrong tier code")),
         }
