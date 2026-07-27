@@ -45,17 +45,6 @@ pub struct RpcInfo {
 
 
 
-pub struct  CallStats {
-    pub latency_ms: u64,
-    pub call_type: CallType, 
-}
-
-#[derive(Debug, Clone)]
-pub enum CallType {
-    MarketCall,
-    OracleCall,
-    LiquidationCall,
-}
 
 
 /*
