@@ -300,7 +300,7 @@ pub async fn acquire_lowest_score(&self) -> anyhow::Result<&Arc<RpcEndpoint>> {
     .await
     .map_err(|_| anyhow::anyhow!("no rpc available"))
 }
-
+    //pub fn acquire_for_tier(tier:u8)
     
     pub fn info(&self) -> Vec<RpcInfo> {
     self.endpoints
