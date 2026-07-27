@@ -67,7 +67,7 @@ pub enum CallType {
 
 • Gère un ensemble d'endpoints RPC.
 
-• acquire() et acquire_top_tier()
+• acquire() et acquire_top_tier() acquire_lowest_latency_top_tier()
   → sélectionnent un endpoint disponible
   → attendent au maximum 2 secondes avant d'abandonner.
 
