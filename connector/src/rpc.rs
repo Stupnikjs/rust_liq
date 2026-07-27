@@ -229,26 +229,37 @@ impl  RpcPool {
     }
     
 
-    pub async fn acquire(&self) -> anyhow::Result<&Arc<RpcEndpoint>> {
-    tokio::time::timeout(
-        Duration::from_secs(2),
-        async {
-            loop {
-                if let Some(ep) = self.endpoints
-                    .iter()
-                    .find(|e| e.try_reserve())
-                {
-
-                    return ep;
-                }
-
-                tokio::time::sleep(Duration::from_millis(20)).await;
-            }
-        }
-    )
-    .await
-    .map_err(|_| anyhow::anyhow!("no rpc available"))
+    pub async fn acquire(&self, tier: u8) -> anyhow::Result<&Arc<RpcEndpoint>> {
+    match tier {
+        0 => self.acquire_lowest_latency_top_tier().await,
+        1 => self.acquire_lowest_score().await,
+        2 => self.acquire_not_top_tier().await,
+        _ => Err(anyhow::anyhow!("wrong tier code")),
     }
+}
+
+
+pub async fn acquire_not_top_tier(&self) -> anyhow::Result<&Arc<RpcEndpoint>> {
+    let top: Vec<&Arc<RpcEndpoint>> = self.endpoints.iter()
+        .filter(|e| e.tier != Tier::Top)
+        .collect();
+
+    if top.is_empty() {
+        return Err(anyhow::anyhow!("no top tier endpoints configured"));
+    }
+
+    tokio::time::timeout(Duration::from_secs(2), async {
+        loop {
+            
+            if let Some(ep) = top.iter().find(|e| e.try_reserve()) {
+                return *ep;
+            }
+            tokio::time::sleep(Duration::from_millis(20)).await;
+        }
+    })
+    .await
+    .map_err(|_| anyhow::anyhow!("no top tier rpc available"))
+}
 
 
 pub async fn acquire_lowest_latency_top_tier(&self) -> anyhow::Result<&Arc<RpcEndpoint>> {
