@@ -1,4 +1,4 @@
-use std::sync::atomic::{AtomicU64, Ordering};
+ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, OnceLock};
 use std::time::{Instant, SystemTime, UNIX_EPOCH}; 
 use alloy::network::Ethereum;
@@ -87,6 +87,12 @@ top_tier_low_latency => liquidation  => tier0
 low_latency => oracle proche liquidation tier1
 public => oracle/market loin de liquidation tier2 
 
+
+call_raw(tier0) acquire_top => acquire_low => acquire_public 
+call_raw(tier1) acquire_low => acquire_top => acquire_public
+call_raw(tier2) acquire_public => acquire_public => aquire_low => acquire_top
+
+le but étant de réserver au maximum top_low pour les call de liquidation 
 
 */
 
