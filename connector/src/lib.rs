@@ -1,5 +1,6 @@
 #![allow(dead_code, unused_variables, unused_imports)]
 use std::sync::Arc;
+use std::time::Instant;
 use alloy::network::Ethereum;
 use alloy::providers::{Provider, ProviderBuilder, RootProvider};
 use alloy::rpc::client::WsConnect;
@@ -43,6 +44,8 @@ Architecture :
 
 */
 
+const TOP_ENDPOINTS_LEN:u8 = 3; 
+
 pub struct Connector {
     pub pool: RpcPool,
     pub ws: Arc<RootProvider<Ethereum>>,
@@ -75,15 +78,19 @@ impl Connector {
     }
 
     pub async fn send_tx(&self, to: Address, data: Bytes) -> Result<TxHash, BoxError> {
-        let ep = match self.pool.acquire_top_tier().await {
-                Ok(ep) => {
-                    ep
-                },
-                Err(_) => {
-                   self.pool.acquire().await.expect("failed aquire_top tier then aquire garbage tier in send tx ")
-                },
-            }; 
-        self.tx_sender.send_tx(&self.pool.acquire_top_tier().await.unwrap().provider, to, data).await
+        for attempt in 0..TOP_ENDPOINTS_LEN {
+         let ep = match self.pool.acquire_top().await {
+            Ok(ep) => ep,
+            Err(_) => {
+                continue; 
+            },
+          
+         };  
+           return  self.tx_sender.send_tx(&ep.provider, to, data.clone()).await   
+        }
+        Err("max retry reached on send_tx".into())
+
+        
     }
 }
 
@@ -103,7 +110,7 @@ pub async fn build(
     let pool = RpcPool::new(rpc_configs);
 
     // le tx_sender s'appuie sur un endpoint top-tier dès l'init
-    let init_ep = pool.acquire_top_tier().await?;
+    let init_ep = pool.acquire_top().await?;
 
     let tx_sender = Arc::new(TxSender::init(&init_ep.provider, signer, chain_id).await?);
     tx_sender.spawn_base_fee_updater(Arc::clone(&ws));
@@ -135,7 +142,7 @@ impl CallRaw for Connector {
         let tx = TransactionRequest::default().from(from).to(to).input(data.into());
 
         for attempt in 0..MAX_RETRIES {
-            let ep = match self.acquire_for_tier(tier).await {
+            let ep = match self.pool.acquire_for(tier, attempt).await {
                 Ok(ep) => ep,
                 Err(_) => {
                     tokio::time::sleep(Duration::from_secs(2)).await;
