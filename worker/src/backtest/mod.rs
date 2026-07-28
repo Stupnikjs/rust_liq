@@ -47,6 +47,7 @@ impl BacktestStore {
     pub async fn new(db_path: &str) -> anyhow::Result<Self> {
         let db_path = db_path.to_string();
         let db_path_for_conn = db_path.clone();
+        let db_path_for_writer = db_path.clone();
 
         let conn = tokio::task::spawn_blocking(move || -> anyhow::Result<Connection> {
             let conn = Connection::open(&db_path)?;
@@ -81,36 +82,43 @@ impl BacktestStore {
 
         let (tx, mut rx) = mpsc::channel::<WriteBatch>(32);
 
-        tokio::spawn(async move {
-            let mut conn = Some(conn);
+    tokio::spawn(async move {
+    let mut conn = conn;
+    
+    while let Some(batch) = rx.recv().await {
+        let c = conn;
+        let res = tokio::task::spawn_blocking(move || {
+            Self::write_batch(c, batch)
+        }).await;
 
-            while let Some(batch) = rx.recv().await {
-                let c = match conn.take() {
-                    Some(c) => c,
-                    None => {
-                        eprintln!("backtest_store: pas de connexion valide, arrêt du writer");
-                        break;
-                    }
-                };
-
-                let res = tokio::task::spawn_blocking(move || {
-                    Self::write_batch(c, batch)
-                }).await;
-
-                match res {
-                    Ok(Ok(c)) => conn = Some(c),
-                    Ok(Err(e)) => {
-                        eprintln!("backtest_store: échec écriture batch: {e}");
-                        break;
-                    }
+        conn = match res {
+            Ok(Ok(c)) => c,
+            Ok(Err(e)) => {
+                eprintln!("backtest_store: échec écriture batch (ignoré, on continue): {e}");
+                // il faut une connexion valide pour la prochaine itération :
+                // rouvrir puisque `c` a été consommée dans le closure et n'est pas récupérable en cas d'erreur
+                match Connection::open(&db_path_for_writer) {
+                    Ok(new_conn) => new_conn,
                     Err(e) => {
-                        eprintln!("backtest_store: task jointure échouée: {e}");
+                        eprintln!("backtest_store: impossible de rouvrir la DB: {e}, arrêt du writer");
                         break;
                     }
                 }
             }
-            eprintln!("backtest_store: writer arrêté");
-        });
+            Err(e) => {
+                eprintln!("backtest_store: task jointure échouée (panic?): {e}");
+                match Connection::open(&db_path_for_writer) {
+                    Ok(new_conn) => new_conn,
+                    Err(e) => {
+                        eprintln!("backtest_store: impossible de rouvrir la DB: {e}, arrêt du writer");
+                        break;
+                    }
+                }
+            }
+        };
+    }
+    eprintln!("backtest_store: writer arrêté");
+});
 
         Ok(Self { tx, db_path: db_path_for_conn })
     }
