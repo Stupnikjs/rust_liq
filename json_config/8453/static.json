@@ -2,7 +2,7 @@
   "chain_id":8453,
   "morpho_addr": "0xBBBBBbbBBb9cC5e90e3b3Af64bdAF62C37EEFFCb",
   "liquidator_addr": "0x1BB6b60C72bBc80D77f34919C724D2255D24A874",
-  "premium_rpc_env_vars": ["ANKR_BASE_HTTP", "CHAINSTACK_BASE_HTTP", "DRPC_BASE_HTTP"],
+  "premium_rpc_env_vars": ["CHAINSTACK_BASE_HTTP", "DRPC_BASE_HTTP", "ANKR_BASE_HTTP"],
   "premium_timeout_ms": 200,
   "public_rpcs": [
     { "url": "https://rpc.baseazul.dev", "timeout_secs": 20 },
@@ -24,7 +24,9 @@
     { "url": "https://developer-access-mainnet.base.org", "timeout_secs": 20 },
     { "url": "https://base.rpc.sentio.xyz", "timeout_secs": 20 },
     { "url": "https://base.api.pocket.network", "timeout_secs": 20 },
-    { "url": "https://1rpc.io/base", "timeout_secs": 20 }
+    { "url": "https://1rpc.io/base", "timeout_secs": 20 },
+    { "url": "https://base.api.onfinality.io/public", "timeout_secs": 20 },
+  { "url": "https://rpc.owlracle.info/base/70d38ce1826c4a60bb2a8e05a6c8b20f", "timeout_secs": 20 }
   ],
   "dexes": [
     { "quoter": "0x3d4e44Eb1374240CE5F1B871ab261CD16335B76a", "router": "0x2626664c2603336E57B271c5C0b26F421741e481", "name": "UniswapV3" }

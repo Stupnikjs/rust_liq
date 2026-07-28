@@ -295,10 +295,11 @@ impl RpcPool {
     /// tier0 = liquidation            -> top    -> low    -> public
     /// tier1 = oracle proche liq.     -> low    -> top    -> public
     /// tier2 = oracle/market loin liq -> public -> low    -> top
-    pub async fn acquire_for(&self, tier: u8, attempt: u32) -> anyhow::Result<&Arc<RpcEndpoint>> {
+    pub async fn acquire_for(&self, tier: u8, attempt: u8) -> anyhow::Result<&Arc<RpcEndpoint>> {
         let step = attempt.min(2); // au-delà de l'étape 2, on reste sur le dernier maillon
 
         match (tier, step) {
+
             (0, 0) => self.acquire_top().await,
             (0, 1) => self.acquire_top().await,
             (0, _) => self.acquire_low().await,

@@ -165,8 +165,8 @@ impl MarketLoopConsumer {
 /// une fois qu'il repasse au-dessus. Évite d'osciller à chaque cycle pile au seuil.
 fn next_tier(current_tier: u8, last_interval: u64) -> u8 {
     match (current_tier, last_interval < THRESHOLD) {
-        (1, true) => 0,
-        (0, false) => 1,
+        (2, true) => 1,
+        (1, false) => 2,
         (t, _) => t,
     }
 }

@@ -12,7 +12,7 @@ use eth_core::utils::BoxError;
 use tokio::sync::RwLock;
 use tokio::task::JoinHandle;
 
-use crate::config::{Config, json::{load_arb_config, load_base_config}};
+use crate::config::{Config, json::{load_arb_config, load_base_config, load_katana_config}};
 use connector::Connector;
 use crate::cache::{MarketCache, logs::MarketLog, parse::fetch_parse_all_market};
 use morpho::types::{MarketParam};
@@ -46,7 +46,7 @@ impl Runner {
         let config = match chainid {
             8453 => load_base_config(&config_path)?,
             42161 => load_arb_config(&config_path)?,
-            // 747474 => load_katana_config(slow_mode)?,
+            747474 => load_katana_config(&config_path)?,
             _ => panic!("unsupported chain {}", chainid),
         };
 
@@ -85,13 +85,13 @@ impl Runner {
     /// puis recalcule et retrie les health factors.
     async fn refresh_market(&self, market_id:alloy_primitives::FixedBytes<32> ) {
         if let Err(e) = self.cache.onchain_oracle_refresh(self.connector.as_ref(), 1, market_id).await {
-            eprintln!("oracle_refresh failed for {market_id}: {e}");
+           // eprintln!("oracle_refresh failed for {market_id}: {e}");
         }
         if let Err(e) = self.cache
             .onchain_market_refresh(self.connector.as_ref(), 1, self.config.morpho_addr, market_id)
             .await
         {
-            eprintln!("market_refresh failed for {market_id}: {e}");
+           // eprintln!("market_refresh failed for {market_id}: {e}");
         }
         let _ = self.cache.recompute_all_hf(market_id);
         let _ = self.cache.sort_by_hf(market_id);

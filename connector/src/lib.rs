@@ -79,7 +79,7 @@ impl Connector {
 
     pub async fn send_tx(&self, to: Address, data: Bytes) -> Result<TxHash, BoxError> {
         for attempt in 0..TOP_ENDPOINTS_LEN {
-         let ep = match self.pool.acquire_top().await {
+         let ep = match self.pool.acquire_for(0, attempt as u8).await {
             Ok(ep) => ep,
             Err(_) => {
                 continue; 
@@ -138,10 +138,10 @@ impl CallRaw for Connector {
         to: Address,
         data: Bytes,
     ) -> Result<Bytes, BoxError> {
-        const MAX_RETRIES: u32 = 3;
+        const MAX_RETRIES: u8 = 3;
         let tx = TransactionRequest::default().from(from).to(to).input(data.into());
 
-        for attempt in 0..MAX_RETRIES {
+        for attempt  in 0..MAX_RETRIES {
             let ep = match self.pool.acquire_for(tier, attempt).await {
                 Ok(ep) => ep,
                 Err(_) => {
@@ -159,7 +159,6 @@ impl CallRaw for Connector {
                     return Ok(bytes);
                 }
                 Err(err) => {
-                    eprintln!("[attempt {attempt}] call_raw failed on {}: {:?}", ep.url, err);
                     ep.register_failure();
                 }
             }
