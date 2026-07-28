@@ -1,7 +1,7 @@
 {
   "chain_id": 747474,
   "morpho_addr": "0x6c247b1F6182318877311737BaC0844bAa518F5e",
-  "liquidator_addr": "0x2661C239C38AaB0d333Be91F999F7E69dD706504",
+  "liquidator_addr": "0xFa99159fC88E856738Ef3c02D09acDdfD99A3B33",
   "premium_rpc_env_vars": ["DRPC_KATANA_HTTP"],
   "premium_timeout_ms": 200,
   "public_rpcs": [
@@ -12,6 +12,6 @@
     { "url": "https://katana.gateway.tenderly.co", "timeout_secs": 20 }
   ],
   "dexes": [
-    { "quoter": "0x61fFE014bA17989E743c5F6cB21bF9697530B21e", "router": "0xe592427a0aece92de3edee1f18e0157c05861564", "name": "UniswapV3" }
+    { "quoter": "0x92dea23ED1C683940fF1a2f8fE23FE98C5d3041c", "router": "0x4e1d81A3E627b9294532e990109e4c21d217376C", "name": "UniswapV3" }
   ]
 }
