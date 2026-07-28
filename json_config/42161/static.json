@@ -36,7 +36,7 @@
   { "url": "wss://arbitrum-one-rpc.publicnode.com", "timeout_secs": 20 },
   { "url": "https://arbitrum-one-rpc.publicnode.com", "timeout_secs": 20 },
   { "url": "https://arbitrum-one.rpc.sentio.xyz", "timeout_secs": 20 },
-  { "url": "https://arbitrum-one-mainnet.gateway.tatum.io", "timeout_secs": 20 },
+  { "url": "https://arbitrum-one-mainnet.gateway.tatum.io", "timeout_secs": 20 }
   ],
   "dexes": [
     { "quoter": "0x61fFE014bA17989E743c5F6cB21bF9697530B21e", "router": "0xe592427a0aece92de3edee1f18e0157c05861564", "name": "UniswapV3" }
