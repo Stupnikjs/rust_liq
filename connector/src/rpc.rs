@@ -289,12 +289,6 @@ impl RpcPool {
     }
 
     /// Point d'entrée unique pour call_raw : applique la chaîne d'escalade
-    /// prévue pour `tier` (tier de call métier, pas Tier d'endpoint), en
-    /// fonction du numéro de tentative en cours.
-    ///
-    /// tier0 = liquidation            -> top    -> low    -> public
-    /// tier1 = oracle proche liq.     -> low    -> top    -> public
-    /// tier2 = oracle/market loin liq -> public -> low    -> top
     pub async fn acquire_for(&self, tier: u8, attempt: u8) -> anyhow::Result<&Arc<RpcEndpoint>> {
         let step = attempt.min(2); // au-delà de l'étape 2, on reste sur le dernier maillon
 

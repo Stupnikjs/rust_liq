@@ -8,8 +8,9 @@
     { "url": "https://rpc.katana.network", "timeout_secs": 20 },
     { "url": "https://rpc.katanarpc.com", "timeout_secs": 20 },
     { "url": "https://katana.drpc.org", "timeout_secs": 20 },
-    { "url": "wss://katana.drpc.org", "timeout_secs": 20 },
-    { "url": "https://katana.gateway.tenderly.co", "timeout_secs": 20 }
+    { "url": "https://rpc.swiftnodes.io/rpc/katana", "timeout_secs": 20 },
+    { "url": "https://katana.gateway.tenderly.co", "timeout_secs": 20 },
+    { "url": "https://katana-mainnet.gateway.tatum.io", "timeout_secs":20}
   ],
   "dexes": [
     { "quoter": "0x92dea23ED1C683940fF1a2f8fE23FE98C5d3041c", "router": "0x4e1d81A3E627b9294532e990109e4c21d217376C", "name": "UniswapV3" }

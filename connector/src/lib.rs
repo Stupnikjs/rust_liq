@@ -120,13 +120,9 @@ pub async fn build(
 
 
 
-
-
 // tier 0 = top_tier_low_latency
 // tier 1 = low_latency
 // tier 2 = public only 
-
-
 
 
 #[async_trait::async_trait]
