@@ -17,7 +17,7 @@ pub const BASE_PANCAKE_QUOTER_V2: Address    = address!("B048Bbc1Ee6b733FFfCFb9e
 pub const BASE_AERODROME_ROUTER: Address     = address!("cF77a3Ba9A5CA399B7c97c74d54e5b1Beb874E43");
 pub const BASE_LIQUIDATOR_LAST: Address      = address!("1BB6b60C72bBc80D77f34919C724D2255D24A874");
 pub const BASE_LIQUIDATOR_V2: Address        = address!("2661C239C38AaB0d333Be91F999F7E69dD706504");
-pub const BASE_WALLET: Address               = address!("78D3FEc647f35E5D413597D217C5E0D9605acE3E");
+// pub const BASE_WALLET: Address               = address!("78D3FEc647f35E5D413597D217C5E0D9605acE3E");
 
 pub const IRM: Address = address!("46415998764C29aB2a25CbeA6254146D50D22687");
 
@@ -26,14 +26,16 @@ pub const ARBITRUM_MORPHO: Address           = address!("6c247b1F618231887731173
 pub const ARBITRUM_UNISWAP_QUOTER_V2: Address = address!("61fFE014bA17989E743c5F6cB21bF9697530B21e");
 pub const ARBITRUM_LIQUIDATOR: Address       = address!("2661C239C38AaB0d333Be91F999F7E69dD706504");
 pub const ARBITRUM_UNISWAP_V3_ROUTER: Address = address!("e592427a0aece92de3edee1f18e0157c05861564");
-pub const ARBITRUM_WALLET: Address           = address!("78D3FEc647f35E5D413597D217C5E0D9605acE3E");
+// pub const ARBITRUM_WALLET: Address           = address!("78D3FEc647f35E5D413597D217C5E0D9605acE3E");
+// pub const EVM_WALLET_NEW: Address = address!("0xCB6E05Ae495ce62b69faDE3044c8D54B7dC18022"); 
+
 
 // Katana
 pub const KATANA_MORPHO: Address             = address!("D50F2DffFd62f94Ee4AEd9ca05C61d0753268aBc");
 pub const KATANA_UNISWAP_V3_ROUTER: Address  = address!("4e1d81A3E627b9294532e990109e4c21d217376C");
 pub const KATANA_UNISWAP_QUOTER_V2: Address  = address!("92dea23ED1C683940fF1a2f8fE23FE98C5d3041c");
 pub const KATANA_LIQUIDATOR: Address         = address!("Fa99159fC88E856738Ef3c02D09acDdfD99A3B33");
-pub const KATANA_WALLET: Address             = address!("78D3FEc647f35E5D413597D217C5E0D9605acE3E");
+// pub const KATANA_WALLET: Address             = address!("78D3FEc647f35E5D413597D217C5E0D9605acE3E");
 
 // Hype
 pub const HYPE_MORPHO: Address               = address!("68e37dE8d93d3496ae143F2E900490f6280C57cD");
