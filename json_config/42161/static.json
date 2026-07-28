@@ -1,7 +1,7 @@
 {
   "chain_id": 42161,
   "morpho_addr": "0x6c247b1F6182318877311737BaC0844bAa518F5e",
-  "liquidator_addr": "0x2661C239C38AaB0d333Be91F999F7E69dD706504",
+  "liquidator_addr": "0x636090CE4b13B84CE32AFd6796C768e2859F42C1",
   "premium_rpc_env_vars": ["DRPC_ARB_HTTP", "ANKR_ARB_HTTP"],
   "premium_timeout_ms": 200,
   "public_rpcs": [

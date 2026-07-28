@@ -83,7 +83,7 @@ pub fn load_base_config(config_path: &str) -> anyhow::Result<Config> {
         morpho_addr: Address::from_str(&raw.morpho_addr)?,
         liquidator_addr: Address::from_str(&raw.liquidator_addr)?,
         dexes,
-        signer: PrivateKeySigner::from_str(&var("MY_SAFE_PK")?)?,
+        signer: PrivateKeySigner::from_str(&var("DRPC_BASE_HTTP_")?)?,
     })
 }
 
@@ -139,7 +139,7 @@ pub fn load_arb_config(config_path: &str) -> anyhow::Result<Config> {
         morpho_addr: Address::from_str(&raw.morpho_addr)?,
         liquidator_addr: Address::from_str(&raw.liquidator_addr)?,
         dexes,
-        signer: PrivateKeySigner::from_str(&var("MY_SAFE_PK")?)?,
+        signer: PrivateKeySigner::from_str(&var("DRPC_BASE_HTTP_")?)?,
     })
 }
 
@@ -195,6 +195,6 @@ pub fn load_katana_config(config_path: &str) -> anyhow::Result<Config> {
         morpho_addr: Address::from_str(&raw.morpho_addr)?,
         liquidator_addr: Address::from_str(&raw.liquidator_addr)?,
         dexes,
-        signer: PrivateKeySigner::from_str(&var("MY_SAFE_PK")?)?,
+        signer: PrivateKeySigner::from_str(&var("DRPC_BASE_HTTP_")?)?,
     })
 }
